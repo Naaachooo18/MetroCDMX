@@ -158,32 +158,64 @@ class InterfazMetro2025:
         self.lista_estaciones = sorted(list(self.display_map.keys()))
 
         # Coordenadas GUI
+        # --- COORDENADAS GUI CORREGIDAS (Cuadrícula Limpia) ---
+        # Lógica:
+        # Eje X: L7 en 150, L3 en 500
+        # Eje Y: Tacubaya/L9 en 380, Zapata en 500, Mixcoac en 580
+        
         self.coords_gui = {
-            "Barranca_del_Muerto_L7": (180, 700), "Mixcoac_L7": (180, 620),
-            "San_Antonio_L7": (180, 540), "San_Pedro_de_los_Pinos_L7": (180, 460),
-            "Tacubaya_L7": (180, 380), "Constituyentes_L7": (180, 280),
-            "Auditorio_L7": (180, 200), "Polanco_L7": (180, 120),
-            
-            "Observatorio_L1": (80, 440), "Tacubaya_L1": (180, 380),
-            "Juanacatlan_L1": (280, 320), "Chapultepec_L1": (360, 240),
-            "Sevilla_L1": (440, 240), "Insurgentes_L1": (520, 240),
-            "Cuauhtemoc_L1": (600, 240), "Balderas_L1": (680, 240),
+            # --- LÍNEA 7 (Naranja) - Vertical Izquierda (Recta) ---
+            "Barranca_del_Muerto_L7": (150, 720),
+            "Mixcoac_L7": (150, 620),             # Transbordo L12
+            "San_Antonio_L7": (150, 540),
+            "San_Pedro_de_los_Pinos_L7": (150, 460),
+            "Tacubaya_L7": (150, 380),            # Transbordo L1, L9 (Hub Central)
+            "Constituyentes_L7": (150, 280),
+            "Auditorio_L7": (150, 200),
+            "Polanco_L7": (150, 120),
 
-            "Tacubaya_L9": (180, 380), "Patriotismo_L9": (280, 380),
-            "Chilpancingo_L9": (380, 380), "Centro_Medico_L9": (480, 380),
-            "Lazaro_Cardenas_L9": (580, 380),
+            # --- LÍNEA 1 (Rosa) - Diagonal Superior ---
+            # Sale de Observatorio, baja a Tacubaya, sube diagonal a Balderas
+            "Observatorio_L1": (60, 440),
+            "Tacubaya_L1": (150, 380),            # Coincide con L7
+            "Juanacatlan_L1": (230, 320),         # Diagonal subiendo
+            "Chapultepec_L1": (300, 280),         # Diagonal subiendo
+            "Sevilla_L1": (360, 280),             # Horizontal
+            "Insurgentes_L1": (430, 280),
+            "Cuauhtemoc_L1": (500, 280),
+            "Balderas_L1": (580, 280),            # Transbordo L3 (Cruce arriba)
 
-            "Universidad_L3": (480, 750), "Copilco_L3": (480, 690),
-            "Miguel_Angel_de_Quevedo_L3": (480, 630), "Viveros_L3": (480, 570),
-            "Coyoacan_L3": (480, 510), "Zapata_L3": (480, 450),
-            "Division_del_Norte_L3": (480, 410), "Eugenia_L3": (480, 395),
-            "Etiopia_L3": (480, 380), "Centro_Medico_L3": (480, 380),
-            "Hospital_General_L3": (480, 310), "Ninos_Heroes_L3": (560, 270),
-            "Balderas_L3": (680, 240), "Juarez_L3": (680, 160),
+            # --- LÍNEA 9 (Marrón) - Horizontal Central (Recta) ---
+            "Tacubaya_L9": (150, 380),            # Coincide con L7
+            "Patriotismo_L9": (260, 380),
+            "Chilpancingo_L9": (370, 380),
+            "Centro_Medico_L9": (500, 380),       # Transbordo L3 (Importante alinear X con L3)
+            "Lazaro_Cardenas_L9": (620, 380),
 
-            "Mixcoac_L12": (180, 620), "Insurgentes_Sur_L12": (280, 620),
-            "Hospital_20_de_Noviembre_L12": (380, 620), "Zapata_L12": (480, 450),
-            "Parque_de_los_Venados_L12": (580, 560), "Eje_Central_L12": (680, 560),
+            # --- LÍNEA 3 (Verde) - Vertical Derecha (Recta) ---
+            # Alineada en X=500 para cruzar con Centro Médico
+            "Universidad_L3": (500, 750),
+            "Copilco_L3": (500, 700),
+            "Miguel_Angel_de_Quevedo_L3": (500, 650),
+            "Viveros_L3": (500, 600),
+            "Coyoacan_L3": (500, 550),
+            "Zapata_L3": (500, 500),              # Transbordo L12
+            "Division_del_Norte_L3": (500, 460),
+            "Eugenia_L3": (500, 430),
+            "Etiopia_L3": (500, 405),
+            "Centro_Medico_L3": (500, 380),       # Cruce perfecto con L9
+            "Hospital_General_L3": (500, 330),
+            "Ninos_Heroes_L3": (540, 305),        # Pequeña curva para evitar solapamiento visual
+            "Balderas_L3": (580, 280),            # Conecta con L1
+            "Juarez_L3": (580, 200),              # Sube recto
+
+            # --- LÍNEA 12 (Dorada) - Inferior ---
+            "Mixcoac_L12": (150, 620),            # Coincide con L7
+            "Insurgentes_Sur_L12": (240, 620),
+            "Hospital_20_de_Noviembre_L12": (330, 620),
+            "Zapata_L12": (500, 500),             # Diagonal directa a Zapata L3
+            "Parque_de_los_Venados_L12": (600, 540), # Diagonal bajando
+            "Eje_Central_L12": (680, 540),
         }
 
         self.crear_layout()
