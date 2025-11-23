@@ -7,6 +7,7 @@ from Mapa import Mapa
 from AEstrella import AEstrella
 
 # --- CLASE TOOLTIP (Ventana flotante) ---
+# --- CLASE TOOLTIP (Ventana flotante) ---
 class ToolTip:
     def __init__(self, widget):
         self.widget = widget
@@ -16,12 +17,13 @@ class ToolTip:
 
     def showtip(self, text):
         if self.tipwindow or not text: return
-        x, y, cx, cy = self.widget.bbox("insert")
+        
+        # Calcular posición basada únicamente en el ratón
         x = self.widget.winfo_pointerx() + 15
         y = self.widget.winfo_pointery() + 10
         
         self.tipwindow = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(1)
+        tw.wm_overrideredirect(1) # Quitar bordes de ventana
         tw.wm_geometry("+%d+%d" % (x, y))
         
         label = tk.Label(tw, text=text, justify=tk.LEFT,
