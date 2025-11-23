@@ -317,6 +317,7 @@ class InterfazMetro2025:
         t = self.colores["oscuro"] if self.modo_oscuro else self.colores["claro"]
         grafo = self.mapa_logico.get_grafo()
 
+        # 1. DIBUJAR CONEXIONES (LÍNEAS)
         for u, v in grafo.edges():
             if u in self.coords_gui and v in self.coords_gui:
                 x1, y1 = self.coords_gui[u]
@@ -324,33 +325,62 @@ class InterfazMetro2025:
                 linea_u = u.split('_')[-1]
                 linea_v = v.split('_')[-1]
                 
+                # Definir grosor y color
                 if linea_u == linea_v:
                     color = self.lineas_color.get(linea_u, "#999")
-                    w = 5
+                    w = 6 # Línea gruesa para las rutas
                 else:
                     color = t["line_inactive"]
-                    w = 2
+                    w = 3 # Línea fina para transbordos
+                
+                # Dibujar línea redondeada
                 self.canvas.create_line(x1, y1, x2, y2, fill=color, width=w, capstyle=tk.ROUND, tags="mapa")
 
-        r = 7
+        # 2. DIBUJAR ESTACIONES Y TEXTOS
+        r = 7 # Radio del punto
         for nodo in grafo.nodes():
             if nodo in self.coords_gui:
                 x, y = self.coords_gui[nodo]
                 nombre_limpio = nodo.split('_')[0]
-                
-                # NODO
-                self.canvas.create_oval(x-(r+2), y-(r+2), x+(r+2), y+(r+2), fill=t["map_bg"], outline="", tags="mapa")
-                item_id = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=t["node_fill"], outline=t["node_outline"], width=1.5, tags=("nodo", nodo))
-                
-                # ETIQUETA INCLINADA
-                text_x = x + 12
-                text_y = y - 5
-                
-                # Halo para legibilidad
-                self.canvas.create_text(text_x, text_y, text=nombre_limpio, anchor="w", font=("Segoe UI", 8, "bold"), fill=t["map_bg"], width=100, angle=30)
-                self.canvas.create_text(text_x, text_y, text=nombre_limpio, anchor="w", font=("Segoe UI", 8, "bold"), fill=t["text_map"], tags=("texto", nodo), angle=30)
+                linea = nodo.split('_')[-1]
 
-                # Tooltips
+                # --- Lógica de Posición del Texto ---
+                # Por defecto, texto a la derecha
+                offset_x = 18
+                offset_y = -5
+                anchor_pos = "w" # West (alineado a la izquierda del texto)
+                
+                # Si es la Línea 7 (Naranja vertical izquierda), poner texto a la izquierda
+                # Excepción: Tacubaya y Mixcoac son cruces, mejor dejarlos a la derecha
+                if "L7" in linea and "Tacubaya" not in nombre_limpio and "Mixcoac" not in nombre_limpio:
+                    offset_x = -18
+                    anchor_pos = "e" # East (alineado a la derecha del texto)
+
+                # Si es Balderas o Juárez (extremo derecho), ajustar un poco
+                if "Juarez" in nombre_limpio:
+                    offset_y = -15
+                    offset_x = 0
+
+                # --- Dibujar Círculos ---
+                # 1. Círculo externo (del color del fondo) para "recortar" la línea que pasa por debajo
+                self.canvas.create_oval(x-(r+2), y-(r+2), x+(r+2), y+(r+2), fill=t["map_bg"], outline="", tags="mapa")
+                
+                # 2. Círculo interno (el nodo real)
+                item_id = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=t["node_fill"], outline=t["node_outline"], width=1.5, tags=("nodo", nodo))
+
+                # --- Dibujar Texto con Halo ---
+                text_x = x + offset_x
+                text_y = y + offset_y
+                angle = 20 # Ángulo de inclinación
+                
+                # Halo (Borde grueso del color del fondo para que se lea sobre las líneas)
+                self.canvas.create_text(text_x, text_y, text=nombre_limpio, anchor=anchor_pos, font=("Segoe UI", 8, "bold"), fill=t["map_bg"], width=150, angle=angle)
+                self.canvas.create_text(text_x, text_y, text=nombre_limpio, anchor=anchor_pos, font=("Segoe UI", 8, "bold"), fill=t["map_bg"], width=150, angle=angle) # Doble pasada para más grosor
+                
+                # Texto Final
+                self.canvas.create_text(text_x, text_y, text=nombre_limpio, anchor=anchor_pos, font=("Segoe UI", 8, "bold"), fill=t["text_map"], tags=("texto", nodo), angle=angle)
+
+                # --- Bindings para Interactividad (Hover) ---
                 self.canvas.tag_bind(item_id, "<Enter>", lambda e, n=nodo, i=item_id: self.on_hover_enter(e, n, i))
                 self.canvas.tag_bind(item_id, "<Leave>", lambda e, i=item_id: self.on_hover_leave(e, i))
 
