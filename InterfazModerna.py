@@ -35,7 +35,7 @@ class ToolTip:
         self.tipwindow = None
         if tw: tw.destroy()
 
-# --- CLASE AUTOCOMPLETE COMBOBOX (ARREGLADA) ---
+# --- CLASE AUTOCOMPLETE COMBOBOX ---
 class AutocompleteCombobox(ttk.Combobox):
     def __init__(self, parent, lista_completa, **kwargs):
         super().__init__(parent, **kwargs)
@@ -44,12 +44,15 @@ class AutocompleteCombobox(ttk.Combobox):
         self['values'] = self._lista_completa
 
     def handle_keyrelease(self, event):
-        # Ignorar teclas de navegación para que no interfieran
+        # Ignorar teclas de navegación
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
             return
 
-        # 1. GUARDAR POSICIÓN DEL CURSOR (Esto arregla el problema)
-        cursor_pos = self.index(tk.INSERT)
+        # 1. GUARDAR POSICIÓN DEL CURSOR
+        try:
+            cursor_pos = self.index(tk.INSERT)
+        except:
+            cursor_pos = 0
         
         valor_actual = self.get()
         
@@ -66,7 +69,10 @@ class AutocompleteCombobox(ttk.Combobox):
                 self.tk.call('ttk::combobox::Unpost', self._w)
         
         # 2. RESTAURAR POSICIÓN DEL CURSOR
-        self.icursor(cursor_pos)
+        try:
+            self.icursor(cursor_pos)
+        except:
+            pass
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
@@ -108,11 +114,15 @@ class InterfazMetro2025:
         self.root.title("Metro CDMX • Navigator 2025")
         self.root.geometry("1280x850")
         
+        # --- ESTILO VISUAL (IMPORTANTE PARA ELIMINAR WINDOWS XP) ---
+        self.style = ttk.Style()
+        self.style.theme_use('clam') # Esto activa el modo plano moderno
+        
         self.mapa_logico = Mapa()
         self.buscador = AEstrella(self.mapa_logico)
         self.modo_oscuro = True 
         
-        # --- NOMBRES VISUALES ---
+        # --- NOMBRES VISUALES CORREGIDOS ---
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.",
             "Mixcoac_L7": "Mixcoac",
@@ -309,6 +319,17 @@ class InterfazMetro2025:
 
         self.txt_pasos.config(bg=t["bg_app"], fg=t["text_primary"])
         
+        # Configurar estilo global para Combobox (Elimina el borde 3D feo)
+        bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
+        fg_input = "white" if self.modo_oscuro else "#111827"
+        
+        self.style.map('TCombobox', 
+                      fieldbackground=[('readonly', bg_input), ('!readonly', bg_input)],
+                      background=[('readonly', bg_input)],
+                      foreground=[('readonly', fg_input), ('!readonly', fg_input)],
+                      selectbackground=[('readonly', bg_input)],
+                      arrowcolor=[('readonly', fg_input)])
+        
         btn_bg = "#818CF8" if self.modo_oscuro else "#4F46E5"
         btn_hover = "#6366F1" if self.modo_oscuro else "#4338CA"
         self.btn_calc.update_colors(t["bg_panel"], btn_bg, btn_hover)
@@ -340,6 +361,7 @@ class InterfazMetro2025:
         for nodo in grafo.nodes():
             if nodo in self.coords_gui:
                 x, y = self.coords_gui[nodo]
+                # USAR EL DICCIONARIO DE NOMBRES BONITOS
                 nombre_mostrar = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 linea = nodo.split('_')[-1]
 
@@ -440,6 +462,7 @@ class InterfazMetro2025:
     def mostrar_pasos_detallados(self, ruta, distancia, tiempo):
         self.txt_pasos.config(state="normal")
         self.txt_pasos.delete(1.0, tk.END)
+        
         self.txt_pasos.insert(tk.END, f"⏱ {tiempo} min total  |  📏 {int(distancia)} m\n\n", "titulo")
 
         nodo_inicio = ruta[0]
@@ -462,6 +485,7 @@ class InterfazMetro2025:
             
             if linea != linea_actual:
                 if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
+                
                 nombre_trans = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 if i == 1 and nombre_trans == nombre_inicio:
                     linea_actual = linea
