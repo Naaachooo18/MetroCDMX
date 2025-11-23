@@ -16,6 +16,7 @@ class ToolTip:
 
     def showtip(self, text):
         if self.tipwindow or not text: return
+        # Posición basada en el ratón
         x = self.widget.winfo_pointerx() + 15
         y = self.widget.winfo_pointery() + 10
         
@@ -34,25 +35,38 @@ class ToolTip:
         self.tipwindow = None
         if tw: tw.destroy()
 
-# --- CLASE AUTOCOMPLETE COMBOBOX ---
+# --- CLASE AUTOCOMPLETE COMBOBOX (ARREGLADA) ---
 class AutocompleteCombobox(ttk.Combobox):
     def __init__(self, parent, lista_completa, **kwargs):
         super().__init__(parent, **kwargs)
         self._lista_completa = lista_completa
-        self._hits = []
         self.bind('<KeyRelease>', self.handle_keyrelease)
         self['values'] = self._lista_completa
 
     def handle_keyrelease(self, event):
-        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right'): return
+        # Ignorar teclas de navegación para que no interfieran
+        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
+            return
+
+        # 1. GUARDAR POSICIÓN DEL CURSOR (Esto arregla el problema)
+        cursor_pos = self.index(tk.INSERT)
+        
         valor_actual = self.get()
+        
         if valor_actual == '':
             self['values'] = self._lista_completa
+            self.tk.call('ttk::combobox::Post', self._w)
         else:
             filtrada = [item for item in self._lista_completa if valor_actual.lower() in item.lower()]
             self['values'] = filtrada
-        if self['values']:
-            self.tk.call('ttk::combobox::Post', self._w)
+            
+            if filtrada:
+                self.tk.call('ttk::combobox::Post', self._w)
+            else:
+                self.tk.call('ttk::combobox::Unpost', self._w)
+        
+        # 2. RESTAURAR POSICIÓN DEL CURSOR
+        self.icursor(cursor_pos)
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
@@ -98,18 +112,16 @@ class InterfazMetro2025:
         self.buscador = AEstrella(self.mapa_logico)
         self.modo_oscuro = True 
         
-        # --- NOMBRES VISUALES CORREGIDOS ---
-        # Diccionario manual para que salgan bonitos en el mapa
+        # --- NOMBRES VISUALES ---
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.",
             "Mixcoac_L7": "Mixcoac",
-            "San_Antonio_L7": "San Antonio",        # CORREGIDO
-            "San_Pedro_de_los_Pinos_L7": "San Pedro", # CORREGIDO (Abreviado para espacio)
+            "San_Antonio_L7": "San Antonio",        
+            "San_Pedro_de_los_Pinos_L7": "San Pedro", 
             "Tacubaya_L7": "Tacubaya",
             "Constituyentes_L7": "Constituyentes",
             "Auditorio_L7": "Auditorio",
             "Polanco_L7": "Polanco",
-            
             "Observatorio_L1": "Observatorio",
             "Tacubaya_L1": "Tacubaya",
             "Juanacatlan_L1": "Juanacatlán",
@@ -118,47 +130,43 @@ class InterfazMetro2025:
             "Insurgentes_L1": "Insurgentes",
             "Cuauhtemoc_L1": "Cuauhtémoc",
             "Balderas_L1": "Balderas",
-
             "Tacubaya_L9": "Tacubaya",
             "Patriotismo_L9": "Patriotismo",
             "Chilpancingo_L9": "Chilpancingo",
             "Centro_Medico_L9": "Centro Médico",
-            "Lazaro_Cardenas_L9": "Lázaro Cárdenas", # CORREGIDO
-
+            "Lazaro_Cardenas_L9": "Lázaro Cárdenas", 
             "Universidad_L3": "Universidad",
             "Copilco_L3": "Copilco",
-            "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", # CORREGIDO
+            "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", 
             "Viveros_L3": "Viveros",
             "Coyoacan_L3": "Coyoacán",
             "Zapata_L3": "Zapata",
-            "Division_del_Norte_L3": "División del N.", # CORREGIDO
+            "Division_del_Norte_L3": "División del N.", 
             "Eugenia_L3": "Eugenia",
             "Etiopia_L3": "Etiopía",
             "Centro_Medico_L3": "Centro Médico",
-            "Hospital_General_L3": "Hosp. General",     # CORREGIDO
-            "Ninos_Heroes_L3": "Niños Héroes",          # CORREGIDO
+            "Hospital_General_L3": "Hosp. General",     
+            "Ninos_Heroes_L3": "Niños Héroes",          
             "Balderas_L3": "Balderas",
             "Juarez_L3": "Juárez",
-
             "Mixcoac_L12": "Mixcoac",
             "Insurgentes_Sur_L12": "Insurgentes Sur",
-            "Hospital_20_de_Noviembre_L12": "20 de Nov.", # CORREGIDO
+            "Hospital_20_de_Noviembre_L12": "20 de Nov.", 
             "Zapata_L12": "Zapata",
-            "Parque_de_los_Venados_L12": "P. de los Venados", # CORREGIDO
-            "Eje_Central_L12": "Eje Central" # CORREGIDO
+            "Parque_de_los_Venados_L12": "P. de los Venados", 
+            "Eje_Central_L12": "Eje Central" 
         }
 
-        # --- PREPARACIÓN DE NOMBRES PARA BUSCADOR ---
+        # --- PREPARACIÓN DE DATOS BUSCADOR ---
         self.mapa_nombres_reales = {} 
         for nodo in self.mapa_logico.get_grafo().nodes():
-            nombre_limpio = nodo.split('_')[0] 
-            if nombre_limpio not in self.mapa_nombres_reales:
-                self.mapa_nombres_reales[nombre_limpio] = []
-            self.mapa_nombres_reales[nombre_limpio].append(nodo)
+            nombre_bonito = self.nombres_mapa.get(nodo, nodo.split('_')[0])
+            if nombre_bonito not in self.mapa_nombres_reales:
+                self.mapa_nombres_reales[nombre_bonito] = []
+            self.mapa_nombres_reales[nombre_bonito].append(nodo)
         
         self.lista_estaciones = sorted(list(self.mapa_nombres_reales.keys()))
 
-        # --- DATOS DE REFERENCIA ---
         self.terminales = {
             "L1": {"izq": "Observatorio", "der": "Pantitlán"},
             "L3": {"arriba": "Indios Verdes", "abajo": "Universidad"},
@@ -193,24 +201,21 @@ class InterfazMetro2025:
         }
 
         self.coords_gui = {
-            # L7 (Vertical Izquierda)
+            # L7
             "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
             "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
             "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
             "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
-
-            # L1 (Diagonal y Horizontal)
+            # L1
             "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
             "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
             "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
             "Cuauhtemoc_L1": (540, 280), "Balderas_L1": (620, 280),      
-
-            # L9 (Horizontal Central)
+            # L9
             "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
             "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
             "Lazaro_Cardenas_L9": (620, 380),
-
-            # L3 (Vertical Derecha)
+            # L3
             "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
             "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
             "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
@@ -218,8 +223,7 @@ class InterfazMetro2025:
             "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
             "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (560, 305),  
             "Balderas_L3": (620, 280), "Juarez_L3": (620, 200),
-
-            # L12 (Inferior)
+            # L12
             "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
             "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
             "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
@@ -336,7 +340,6 @@ class InterfazMetro2025:
         for nodo in grafo.nodes():
             if nodo in self.coords_gui:
                 x, y = self.coords_gui[nodo]
-                # USAR EL DICCIONARIO CORREGIDO
                 nombre_mostrar = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 linea = nodo.split('_')[-1]
 
@@ -387,17 +390,12 @@ class InterfazMetro2025:
     def obtener_mejor_nodo(self, nombre_origen, nombre_destino):
         candidatos_origen = self.mapa_nombres_reales.get(nombre_origen)
         candidatos_destino = self.mapa_nombres_reales.get(nombre_destino)
-        
-        if not candidatos_origen or not candidatos_destino:
-            return None, None
-            
+        if not candidatos_origen or not candidatos_destino: return None, None
         for u in candidatos_origen:
             linea_u = u.split('_')[-1]
             for v in candidatos_destino:
                 linea_v = v.split('_')[-1]
-                if linea_u == linea_v:
-                    return u, v
-        
+                if linea_u == linea_v: return u, v
         return candidatos_origen[0], candidatos_destino[0]
 
     def calcular_ruta(self):
@@ -411,7 +409,7 @@ class InterfazMetro2025:
         id_origen, id_destino = self.obtener_mejor_nodo(origen_nombre, destino_nombre)
         
         if not id_origen or not id_destino:
-            messagebox.showerror("Error", "Estación no válida.")
+            messagebox.showerror("Error", "Estación no válida (Usa el autocompletado).")
             return
 
         ruta, costo_metros = self.buscador.encontrar_ruta(id_origen, id_destino)
@@ -442,7 +440,6 @@ class InterfazMetro2025:
     def mostrar_pasos_detallados(self, ruta, distancia, tiempo):
         self.txt_pasos.config(state="normal")
         self.txt_pasos.delete(1.0, tk.END)
-        
         self.txt_pasos.insert(tk.END, f"⏱ {tiempo} min total  |  📏 {int(distancia)} m\n\n", "titulo")
 
         nodo_inicio = ruta[0]
@@ -465,7 +462,6 @@ class InterfazMetro2025:
             
             if linea != linea_actual:
                 if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
-                
                 nombre_trans = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 if i == 1 and nombre_trans == nombre_inicio:
                     linea_actual = linea
@@ -474,7 +470,6 @@ class InterfazMetro2025:
                         if dir_term: 
                              self.txt_pasos.insert(tk.END, f"   → Cambio a {self.info_lineas.get(linea)} (Dir. {dir_term})\n", "direccion")
                     continue
-
                 self.txt_pasos.insert(tk.END, f"• TRANSBORDO en {nombre_trans}\n", "transbordo")
                 if i+1 < len(ruta):
                     dir_term = self.get_direccion_linea(ruta[i], ruta[i+1], linea)
@@ -486,7 +481,8 @@ class InterfazMetro2025:
                 count += 1
         
         if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
-        self.txt_pasos.insert(tk.END, f"🏁 Llegada a {self.nombres_mapa.get(ruta[-1], ruta[-1].split('_')[0])}", "titulo")
+        nombre_fin = self.nombres_mapa.get(ruta[-1], ruta[-1].split('_')[0])
+        self.txt_pasos.insert(tk.END, f"🏁 Llegada a {nombre_fin}", "titulo")
         self.txt_pasos.config(state="disabled")
 
     def mostrar_info(self, texto):
