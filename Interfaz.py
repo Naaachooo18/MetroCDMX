@@ -272,9 +272,9 @@ class InterfazMetro2025:
         self.lista_estaciones = sorted(list(self.mapa_nombres_reales.keys()))
 
         self.terminales = {
-            "L1": {"izq": "Observatorio", "der": "Pantitlán"}, "L3": {"arriba": "Indios Verdes", "abajo": "Universidad"},
-            "L7": {"arriba": "El Rosario", "abajo": "Barranca del Muerto"}, "L9": {"izq": "Tacubaya", "der": "Pantitlán"},
-            "L12": {"izq": "Mixcoac", "der": "Tláhuac"}
+            "L1": {"izq": "Observatorio", "der": "Balderas"}, "L3": {"arriba": "Juárez", "abajo": "Universidad"},
+            "L7": {"arriba": "Polanco", "abajo": "Barranca del Muerto"}, "L9": {"izq": "Tacubaya", "der": "Lázaro Cárdenas"},
+            "L12": {"izq": "Mixcoac", "der": "Eje Central"}
         }
 
         self.crear_layout()
