@@ -34,7 +34,7 @@ class ToolTip:
         self.tipwindow = None
         if tw: tw.destroy()
 
-# --- CLASE AUTOCOMPLETE COMBOBOX ---
+# --- CLASE AUTOCOMPLETE COMBOBOX (CORREGIDA: NO BLOQUEA ESCRITURA) ---
 class AutocompleteCombobox(ttk.Combobox):
     def __init__(self, parent, lista_completa, **kwargs):
         super().__init__(parent, **kwargs)
@@ -43,9 +43,11 @@ class AutocompleteCombobox(ttk.Combobox):
         self['values'] = self._lista_completa
 
     def handle_keyrelease(self, event):
-        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
+        # Ignorar teclas de navegación y enter
+        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End', 'Prior', 'Next'):
             return
 
+        # 1. Guardar posición exacta del cursor
         try:
             cursor_pos = self.index(tk.INSERT)
         except:
@@ -53,20 +55,24 @@ class AutocompleteCombobox(ttk.Combobox):
         
         valor_actual = self.get()
         
+        # Filtrar lista
         if valor_actual == '':
             self['values'] = self._lista_completa
-            self.tk.call('ttk::combobox::Post', self._w)
         else:
             filtrada = [item for item in self._lista_completa if valor_actual.lower() in item.lower()]
             self['values'] = filtrada
             
+            # Gestionar desplegable
             if filtrada:
                 self.tk.call('ttk::combobox::Post', self._w)
             else:
                 self.tk.call('ttk::combobox::Unpost', self._w)
         
+        # 2. CRÍTICO: Restaurar estado de escritura
         try:
-            self.icursor(cursor_pos)
+            self.icursor(cursor_pos)      # Poner cursor donde estaba
+            self.selection_clear()        # Quitar selección azul (que borraba el texto)
+            self.focus_set()              # Forzar foco en el texto, no en la lista
         except:
             pass
 
@@ -110,6 +116,7 @@ class InterfazMetro2025:
         self.root.title("Metro CDMX • Navigator 2025")
         self.root.geometry("1280x850")
         
+        # ESTILO CLAM (MODERNO)
         self.style = ttk.Style()
         self.style.theme_use('clam')
         
@@ -117,10 +124,11 @@ class InterfazMetro2025:
         self.buscador = AEstrella(self.mapa_logico)
         self.modo_oscuro = True 
         
-        # Variable para el Checkbox de Hora Punta
+        # Checkbox Hora Punta
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
 
+        # NOMBRES MAPA CORREGIDOS
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.",
             "Mixcoac_L7": "Mixcoac",
@@ -165,6 +173,7 @@ class InterfazMetro2025:
             "Eje_Central_L12": "Eje Central" 
         }
 
+        # NOMBRES BUSCADOR (Usamos los nombres bonitos)
         self.mapa_nombres_reales = {} 
         for nodo in self.mapa_logico.get_grafo().nodes():
             nombre_bonito = self.nombres_mapa.get(nodo, nodo.split('_')[0])
@@ -174,6 +183,7 @@ class InterfazMetro2025:
         
         self.lista_estaciones = sorted(list(self.mapa_nombres_reales.keys()))
 
+        # Datos Referencia
         self.terminales = {
             "L1": {"izq": "Observatorio", "der": "Pantitlán"},
             "L3": {"arriba": "Indios Verdes", "abajo": "Universidad"},
@@ -208,17 +218,21 @@ class InterfazMetro2025:
         }
 
         self.coords_gui = {
+            # L7
             "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
             "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
             "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
             "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
+            # L1
             "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
             "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
             "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
             "Cuauhtemoc_L1": (540, 280), "Balderas_L1": (620, 280),      
+            # L9
             "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
             "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
             "Lazaro_Cardenas_L9": (620, 380),
+            # L3
             "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
             "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
             "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
@@ -226,6 +240,7 @@ class InterfazMetro2025:
             "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
             "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (560, 305),  
             "Balderas_L3": (620, 280), "Juarez_L3": (620, 200),
+            # L12
             "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
             "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
             "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
@@ -251,15 +266,16 @@ class InterfazMetro2025:
         tk.Frame(self.sidebar, height=20, bg=self.sidebar['bg']).pack()
         self.crear_autocomplete("Destino Final", "destino")
 
-        # --- BOTÓN HORA PUNTA ---
-        tk.Frame(self.sidebar, height=30, bg=self.sidebar['bg']).pack() # Spacer
+        tk.Frame(self.sidebar, height=30, bg=self.sidebar['bg']).pack()
+        
+        # Checkbox Hora Punta
         self.chk_hora_punta = tk.Checkbutton(self.sidebar, text=" Hora Punta ⚠️", 
                                              variable=self.hora_punta_var,
                                              relief="flat", cursor="hand2", 
                                              font=("Segoe UI", 10, "bold"),
                                              highlightthickness=0, borderwidth=0,
                                              activebackground=self.sidebar['bg'],
-                                             activeforeground="#EF4444") # Rojo al hacer click
+                                             activeforeground="#EF4444")
         self.chk_hora_punta.pack(anchor="w", pady=(0, 10))
 
         self.btn_calc = BotonModerno(self.sidebar, "Calcular Ruta Óptima", self.calcular_ruta, width=340, height=55)
@@ -322,11 +338,11 @@ class InterfazMetro2025:
 
         self.txt_pasos.config(bg=t["bg_app"], fg=t["text_primary"])
         
-        # Checkbutton estilo manual
+        # Configurar Checkbox
         self.chk_hora_punta.config(bg=t["bg_panel"], fg=t["text_primary"], 
                                    selectcolor=t["bg_panel"], activebackground=t["bg_panel"])
 
-        # Configurar estilo global para Combobox
+        # ESTILO COMBOBOX
         bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
         fg_input = "white" if self.modo_oscuro else "#111827"
         
@@ -461,7 +477,6 @@ class InterfazMetro2025:
         
         tiempo_viaje = (costo_metros / 580) + (num_paradas * 0.5) + (num_transbordos * 4)
         
-        # --- APLICAR FACTOR HORA PUNTA ---
         if self.hora_punta_var.get():
             tiempo_viaje *= 1.5 
             
@@ -473,7 +488,6 @@ class InterfazMetro2025:
     def mostrar_pasos_detallados(self, ruta, distancia, tiempo):
         self.txt_pasos.config(state="normal")
         self.txt_pasos.delete(1.0, tk.END)
-        
         self.txt_pasos.insert(tk.END, f"⏱ {tiempo} min total  |  📏 {int(distancia)} m\n\n", "titulo")
         
         if self.hora_punta_var.get():
