@@ -79,7 +79,7 @@ class Placements:
         "San Pedro": (18, 0, "w", None), 
         
         # L1 (Horizontal - Arriba/Abajo)
-        "Observatorio": (-18, 0, "e", 0), 
+        "Observatorio": (20, 20, "s", 0), 
         "Juanacatlán": (0, -18, "s", 0),   
         "Chapultepec": (0, 18, "n", 0),  
         "Sevilla": (0, -18, "s", 0),     
