@@ -612,9 +612,12 @@ class InterfazMetro2025:
             #Dibuja el ovalo resaltado
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
+    #Crea un efecto de animacion de la ruta seguida por el usuario
     def animar_ruta(self, ruta, index):
         scale, dx, dy = self.obtener_transformacion()
+        #Si llega al penultim nodo para
         if index >= len(ruta) - 1: 
+            #Marca el nodo destino de rojo
             self.resaltar_nodo(ruta[-1], "#EF4444", scale, dx, dy) 
             return
 
@@ -623,7 +626,9 @@ class InterfazMetro2025:
         nombre_u = u.rsplit('_', 1)[0]
         nombre_v = v.rsplit('_', 1)[0]
         
+        #Resalta el nodo origen
         if index == 0: self.resaltar_nodo(u, "#3B82F6", scale, dx, dy)
+        #Resalta transbordos
         elif nombre_u == nombre_v: self.resaltar_nodo(u, "#FACC15", scale, dx, dy)
 
         if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
@@ -633,16 +638,22 @@ class InterfazMetro2025:
             y1 = y1_base * scale + dy
             x2 = x2_base * scale + dx
             y2 = y2_base * scale + dy
-            color = "#22D3EE"
+            color = "#22D3EE"#Color de la ruta del ususario
+            #Dibuja el segmento de la linea resaltada
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5*scale, capstyle=tk.ROUND)
-        
+            
+        #Llama al siguient segmento  pasados 150ms
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
 
+#EJECUCIÓN PRINCIPAL
 if __name__ == "__main__":
+    #Crea la ventana princiapl
     root = tk.Tk()
     try:
         from ctypes import windll
         windll.shcore.SetProcessDpiAwareness(1)
     except: pass
+    #Instancia  la aplicacion del metro
     app = InterfazMetro2025(root)
+    #Inicia el bucle de eventos
     root.mainloop()
