@@ -201,8 +201,8 @@ class BuscadorInteligente(tk.Frame):
         if bg_panel: self.config(bg=bg_panel)
         if self.listbox_window: self.listbox.config(bg="#1E293B", fg="white")
 
-# --- CLASE BOTÓN MODERNO ---
-class BotonModerno(tk.Canvas):
+
+class Boton(tk.Canvas):
     # Inicializa el lienzo, dibuja la forma redondeada y el texto, y vincula los eventos del ratón
     def __init__(self, parent, text, command, width=200, height=50, bg_color="#2563EB", text_color="white", hover_color="#1D4ED8"):
         super().__init__(parent, width=width, height=height, bg=parent['bg'], highlightthickness=0)
@@ -300,41 +300,55 @@ class InterfazMetro2025:
         self.aplicar_tema_fijo()
     # Divide la ventana en panel lateral con los conotroles y el mapa
     def crear_layout(self):
+        #contenedor principal (ocupa toda la pantalla)
         self.main_container = tk.Frame(self.root)
         self.main_container.pack(fill=tk.BOTH, expand=True)
-
+        #crea el panel izquierdo
         self.sidebar = tk.Frame(self.main_container, width=400, padx=30, pady=30)
         self.sidebar.pack(side=tk.LEFT, fill=tk.Y)
+        #evito que si meto cosas cambie el tamaño
         self.sidebar.pack_propagate(False)
 
+        #Titulo(CDMx Metro)
         self.lbl_logo = tk.Label(self.sidebar, text="CDMX Metro", font=("Segoe UI Variable Display", 28, "bold"), anchor="w")
         self.lbl_logo.pack(fill=tk.X)
-        self.lbl_sublogo = tk.Label(self.sidebar, text="Planificador Inteligente", font=("Segoe UI", 11), anchor="w")
+        #Subtitulo
+        self.lbl_sublogo = tk.Label(self.sidebar, text="Aplicación Metro CDMX", font=("Segoe UI", 11), anchor="w")
         self.lbl_sublogo.pack(fill=tk.X, pady=(0, 40))
-
+        #1er cuadro de busqueda
         self.crear_buscador("Punto de Partida", "origen")
+        #2do cuadro de busqueda
         self.crear_buscador("Destino Final", "destino", padding=(20, 0))
 
+        #boton de hora punta
         self.chk_hora_punta = tk.Checkbutton(self.sidebar, text=" Hora Punta ⚠️", variable=self.hora_punta_var,
                                              relief="flat", cursor="hand2", font=("Segoe UI", 10, "bold"),
                                              highlightthickness=0, borderwidth=0, activebackground=self.sidebar['bg'], activeforeground="#EF4444")
         self.chk_hora_punta.pack(anchor="w", pady=(30, 10))
 
-        self.btn_calc = BotonModerno(self.sidebar, "Calcular Ruta Óptima", self.calcular_ruta, width=340, height=55)
+        #botón calcular ruta óptima
+        self.btn_calc = Boton(self.sidebar, "Calcular Ruta Óptima", self.calcular_ruta, width=340, height=55)
         self.btn_calc.pack(pady=(0, 30))
 
+        #titulo detalles del viaje
         self.lbl_res_titulo = tk.Label(self.sidebar, text="Detalles del viaje", font=("Segoe UI", 12, "bold"), anchor="w")
         self.lbl_res_titulo.pack(fill=tk.X, pady=(0, 10))
 
+        #caja donde se muestran los detalles de la ruta
         self.txt_pasos = tk.Text(self.sidebar, height=15, font=("Segoe UI", 10), relief="flat", wrap="word", padx=15, pady=15, highlightthickness=0, state="disabled")
         self.txt_pasos.pack(fill=tk.BOTH, expand=True)
+        #configura las negritas, los colores...
         self.configurar_tags_texto()
 
+        #caja que contiene el mapa(canvas)
         self.map_frame = tk.Frame(self.main_container)
         self.map_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        #canvas donde se dibuja el mapa 
         self.canvas = tk.Canvas(self.map_frame, highlightthickness=0)
-        self.canvas.pack(fill=tk.BOTH, expand=True)
+        self.canvas.pack(fill=tk.BOTH, expand=True) 
+        #redibuja el mapa cuando cambia de tamaño
         self.canvas.bind("<Configure>", self.redimensionar_mapa)
+
     # Método auxiliar para instanciar los widgets de la búsqueda y evitar la duplicidad del código
     def crear_buscador(self, titulo, var_name, padding=(0, 0)):
         lbl = tk.Label(self.sidebar, text=titulo, font=("Segoe UI", 10, "bold"), anchor="w")
