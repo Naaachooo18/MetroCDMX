@@ -381,15 +381,16 @@ class InterfazMetro2025:
         dx = offset_x - (min_x * scale)
         dy = offset_y - (min_y * scale)
         return scale, dx, dy
-
+    #dibuja las nodos y las aristas en el canvas
     def dibujar_mapa(self):
-        self.canvas.delete("all")
+        self.canvas.delete("all") #borra el dibujo anterior
         t = self.colores
         grafo = self.mapa_logico.get_grafo()
         scale, dx, dy = self.obtener_transformacion()
         drawn_names = set()
-
+        #dibuja las aristas
         for u, v in grafo.edges():
+            #solo dibuja si tienen coordenadas asignadas
             if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
                 x1_b, y1_b = Placements.COORDS_GUI[u]
                 x2_b, y2_b = Placements.COORDS_GUI[v]
@@ -400,15 +401,16 @@ class InterfazMetro2025:
 
                 linea_u = u.split('_')[-1]
                 linea_v = v.split('_')[-1]
-                
+                #comprueba que las estaciones pertenezacan a la misma arista y pinta la linea
                 if linea_u == linea_v:
                     color = self.lineas_color.get(linea_u, "#999")
                     w = 6 * scale
                 else:
                     color = t["line_inactive"]
                     w = 3 * scale
+                    #dibuja la linea en el canvas
                 self.canvas.create_line(x1, y1, x2, y2, fill=color, width=w, capstyle=tk.ROUND, tags="mapa")
-
+        #dibujo los nodos
         r = 7 * scale
         font_size = int(8 * scale)
         font_size = max(6, min(font_size, 12)) 
@@ -418,44 +420,59 @@ class InterfazMetro2025:
                 x_b, y_b = Placements.COORDS_GUI[nodo]
                 x = x_b * scale + dx
                 y = y_b * scale + dy
-
+                #obtiene el nombre
                 nombre = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 linea = nodo.split('_')[-1]
-
+                #dibuja el circulo exterior del nodo
                 self.canvas.create_oval(x-(r+2), y-(r+2), x+(r+2), y+(r+2), fill=t["map_bg"], outline="", tags="mapa")
+                #dibuja el interior del circulo
                 item_id = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=t["node_fill"], outline=t["node_outline"], width=1.5*scale, tags=("nodo", nodo))
                 
+                #dibuja el nombre
                 if nombre not in drawn_names:
+                    #busca la posición del nombre
                     placement = Placements.TEXT_PLACEMENTS.get(nombre)
                     if placement:
                         off_x, off_y, anchor, ang = placement
                     else:
                         off_x, off_y, anchor, ang = Placements.DEFAULT_PLACEMENT
-                    
+                    #si no tiene ángulo coge el mismo que la linea
                     if ang is None: ang = Placements.LINE_DEFAULT_ANGLES.get(linea, 0)
                     
+                    #posición del nombre
                     t_x = x + (off_x * scale)
                     t_y = y + (off_y * scale)
                     
+                    #ponemos negrita al nombre
                     self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_size, "bold"), fill=t["map_bg"], width=150, angle=ang)
+                    #texto real
                     self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_size, "bold"), fill=t["text_map"], tags=("texto", nodo), angle=ang)
                     drawn_names.add(nombre)
-
+                #muestra el tooltip cuando se pone el cursor sobre el nodo
                 self.canvas.tag_bind(item_id, "<Enter>", lambda e, n=nodo, i=item_id: self.on_hover_enter(e, n, i))
+                #oculta el tooltip cuando el cursor sale del nodo
                 self.canvas.tag_bind(item_id, "<Leave>", lambda e, i=item_id: self.on_hover_leave(e, i))
-
+    
+    #resalta el nodo cuando el cursor está encima del nodo 
     def on_hover_enter(self, event, nodo_id, item_id):
         self.canvas.itemconfig(item_id, width=3, outline=self.colores["text_primary"])
+        #obtiene el nombre de la estación
         nombre = self.nombres_mapa.get(nodo_id, nodo_id.split('_')[0])
         linea = nodo_id.split('_')[-1]
+        #construye el texot que aparece en el tooltip(nombre de la estación y linea)
         info = f"{nombre}\n{self.info_lineas.get(linea, linea)}"
+        #asocia el tooltip con el canvas
         self.tooltip = ToolTip(self.canvas)
+        #muestra el tooltip 
         self.tooltip.showtip(info)
-
+    
+    #cuando el cursor abandona el nodo, este vuelve a su estado original
     def on_hover_leave(self, event, item_id):
         t = self.colores
         self.canvas.itemconfig(item_id, width=1.5, outline=t["node_outline"])
+        #si el tooltip esta activado lo oculta
         if hasattr(self, 'tooltip'): self.tooltip.hidetip()
+
 
     def get_direccion_linea(self, u, v, linea):
         if u not in Placements.COORDS_GUI or v not in Placements.COORDS_GUI: return ""
