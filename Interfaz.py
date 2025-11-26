@@ -479,26 +479,38 @@ class InterfazMetro2025:
 
 
     def get_direccion_linea(self, u, v, linea):
+        #si la estación no tiene coordenadas, no se puede calcular
         if u not in Placements.COORDS_GUI or v not in Placements.COORDS_GUI: return ""
+        #si la linea no tiene terminales no se puede saber la dirección
         if linea not in self.terminales: return ""
+        #coordenadas de la estación actual y la siguiente
         xu, yu = Placements.COORDS_GUI[u]
         xv, yv = Placements.COORDS_GUI[v]
+        #ver hacia donde se mueve el tren(movimiento horizontal y vertical)
         dx = xv - xu
         dy = yv - yu
+        #obtener las terminales
         terms = self.terminales[linea]
+        #desplazamientos orizontales y verticales   
         if linea in ["L1", "L9", "L12"]: return terms["der"] if dx > 0 else terms["izq"]
         elif linea in ["L3", "L7"]: return terms["abajo"] if dy > 0 else terms["arriba"]
         return ""
 
+    #obtiene los nodos internos de una estación
     def obtener_mejor_nodo(self, nombre_origen, nombre_destino):
+        #obtiene nodos origen y destino
         candidatos_origen = self.mapa_nombres_reales.get(nombre_origen)
         candidatos_destino = self.mapa_nombres_reales.get(nombre_destino)
+        #si no existen no se puede calcular la ruta
         if not candidatos_origen or not candidatos_destino: return None, None
+        #mira si el nodo origen y destino estan en la misma linea
         for u in candidatos_origen:
             linea_u = u.split('_')[-1]
             for v in candidatos_destino:
                 linea_v = v.split('_')[-1]
+                #si estan en la misma linea se eligen esos nodos como el mejor par
                 if linea_u == linea_v: return u, v
+        #si no comparten linea, hay que hacer transbordo,se toma el primer candidato de cada lista
         return candidatos_origen[0], candidatos_destino[0]
 
     def calcular_ruta(self):
