@@ -23,7 +23,8 @@ class AEstrella:
             return 0
 
         # Convertir grados a radianes
-        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+        lat1, lon1 = map(radians, (lat1, lon1))
+        lat2, lon2 = map(radians, (lat2, lon2))
 
         # Fórmula de Haversine
         dlon = lon2 - lon1
