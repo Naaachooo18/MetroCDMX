@@ -47,20 +47,20 @@ class AEstrella:
         try:
             print(f"Calculando ruta A* de {estacion_origen_id} a {estacion_destino_id}...")
             
-            ruta = nx.astar_path(
+            ruta = nx.astar_path( # llamada al alforitmo A* de networkx
                 self.mapa,
                 source=estacion_origen_id,
                 target=estacion_destino_id,
-                heuristic=self.heuristica_haversine,
-                weight="weight"
+                heuristic=self.heuristica_haversine, # le pasamos nuestra heuristica
+                weight="weight" # le decimos que mire el atributo "weight" de las aristas
             )
             
-            coste_total = nx.path_weight(self.mapa, ruta, weight="weight")
+            coste_total = nx.path_weight(self.mapa, ruta, weight="weight") #calculamos el coste total
             return ruta, coste_total
             
-        except nx.NetworkXNoPath:
+        except nx.NetworkXNoPath: # si las estaciones estan desconectadas:
             print("No se encontró ruta entre las estaciones seleccionadas.")
             return None, 0
-        except Exception as e:
+        except Exception as e:# si ocurre cualquier otro error:
              print(f"Error en A*: {e}")
              return None, 0
