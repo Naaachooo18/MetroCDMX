@@ -273,7 +273,7 @@ class InterfazMetro2025:
             "bg_app": "#0F172A", "bg_panel": "#1E293B", "text_primary": "#F8FAFC", "text_secondary": "#94A3B8", 
             "map_bg": "#0F172A", "line_inactive": "#334155", "node_fill": "#1E293B", "node_outline": "#94A3B8", "text_map": "#CBD5E1"
         }
-        self.lineas_color = { "L1": "#EC4899", "L3": "#84CC16", "L7": "#F97316", "L9": "#A97142", "L12": "#EAB308" }
+        self.lineas_color = { "L1": "#EC4899", "L3": "#84CC16", "L7": "#F97316", "L9": "#A97142", "L12": "#02590F" }
         self.info_lineas = { "L1": "Línea 1", "L3": "Línea 3", "L7": "Línea 7", "L9": "Línea 9", "L12": "Línea 12" }
 
         self.nombres_mapa = {
