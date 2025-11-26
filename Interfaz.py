@@ -5,13 +5,12 @@ import unicodedata
 
 from Mapa import Mapa
 from AEstrella import AEstrella
-
-# --- CONFIGURACIÓN ESTÁTICA (COORDENADAS Y ÁNGULOS) ---
-class Placements:
+    
+class Placements:# coordenadas base
     BASE_WIDTH = 800
     BASE_HEIGHT = 800
 
-    COORDS_GUI = {
+    COORDS_GUI = { #establecemos las coordenadas de cada estación
         # L7 (Naranja)
         "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
         "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
@@ -39,9 +38,9 @@ class Placements:
         "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
         "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
     }
-    
+    #angulos base de las lineas
     LINE_DEFAULT_ANGLES = {"L1": 0, "L3": 0, "L7": 0, "L9": 0, "L12": 0}
-
+    #posición de los nombres
     TEXT_PLACEMENTS = {
         "Barranca del M.": (-18, 0, "e", None), "San Antonio": (-18, 0, "e", None),
         "Constituyentes": (-18, 0, "e", None), "Auditorio": (-18, 0, "e", None), "Polanco": (-18, 0, "e", None),
@@ -63,10 +62,10 @@ class Placements:
         "Tacubaya": (-18, 0, "e", 0), "Zapata": (-18, 0, "e", 0),            
         "Centro Médico": (47, -10, "s", 0),      
     }
-    
+    #posición base
     DEFAULT_PLACEMENT = (18, 0, "w", 0) 
 
-# --- CLASE TOOLTIP ---
+#creamos un tooltip para poder pasar el ratón por un nodo y que nos muestre información
 class ToolTip:
     def __init__(self, widget):
         self.widget = widget
