@@ -675,35 +675,33 @@ class InterfazMetro2025:
     def animar_ruta(self, ruta, index):
         # 1. AL FINALIZAR LA RUTA
         if index >= len(ruta) - 1: 
-            # Pintar el destino final de ROJO
-            self.resaltar_nodo(ruta[-1], "#EF4444") # Rojo Intenso
+            self.resaltar_nodo(ruta[-1], "#EF4444") # Rojo (Destino)
             return
 
         u = ruta[index]
         v = ruta[index+1]
         
-        # 2. PINTAR NODOS ESPECIALES MIENTRAS AVANZA
+        # --- CORRECCIÓN AQUÍ ---
+        # Usamos rsplit('_', 1)[0] para quitar SOLO el "_L7" del final
+        # Así "San_Antonio_L7" se convierte en "San_Antonio", no en "San"
+        nombre_u = u.rsplit('_', 1)[0]
+        nombre_v = v.rsplit('_', 1)[0]
         
-        # A) Si es el PRIMER nodo -> AZUL
+        # 2. PINTAR NODOS ESPECIALES
         if index == 0:
-            self.resaltar_nodo(u, "#3B82F6") # Azul Brillante
+            self.resaltar_nodo(u, "#3B82F6") # Azul (Inicio)
             
-        # B) Si es un TRANSBORDO -> AMARILLO
-        # Detectamos transbordo si el nombre base es igual (Ej: Tacubaya_L1 -> Tacubaya_L7)
-        elif u.split('_')[0] == v.split('_')[0]:
-            self.resaltar_nodo(u, "#FACC15") # Amarillo Oro
+        # Si los nombres base son idénticos (ej: Tacubaya == Tacubaya), es transbordo
+        elif nombre_u == nombre_v:
+            self.resaltar_nodo(u, "#FACC15") # Amarillo (Transbordo)
 
-        # 3. DIBUJAR LA LÍNEA (TÚNEL)
+        # 3. DIBUJAR CAMINO
         if u in self.coords_gui and v in self.coords_gui:
             x1, y1 = self.coords_gui[u]
             x2, y2 = self.coords_gui[v]
-            
-            # Color de la ruta (Cian en oscuro, Azul en claro)
-            color_ruta = "#22D3EE" if self.modo_oscuro else "#0284C7"
-            
-            self.canvas.create_line(x1, y1, x2, y2, fill=color_ruta, width=5, capstyle=tk.ROUND)
+            color = "#22D3EE" if self.modo_oscuro else "#0284C7"
+            self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5, capstyle=tk.ROUND)
         
-        # 4. SIGUIENTE PASO (Velocidad ajustable cambiando el 150)
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
 
 if __name__ == "__main__":
