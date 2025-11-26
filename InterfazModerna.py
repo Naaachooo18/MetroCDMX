@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import math
+import unicodedata
 
 # Importamos tu lógica existente
 from Mapa import Mapa
@@ -159,36 +160,66 @@ class ToolTip:
 class AutocompleteCombobox(ttk.Combobox):
     def __init__(self, parent, lista_completa, **kwargs):
         super().__init__(parent, **kwargs)
-        self._lista_completa = lista_completa
+        self._lista_completa = list(lista_completa)
         self.bind('<KeyRelease>', self.handle_keyrelease)
-        self['values'] = self._lista_completa 
+        self['values'] = self._lista_completa
+        self.config(state="normal")  # editable
+
+    def _normalizar(self, texto: str) -> str:
+        """
+        Pasa el texto a minúsculas y le quita las tildes/acentos
+        (Juárez -> juarez, Coyoacán -> coyoacan).
+        """
+        if texto is None:
+            return ""
+        # Descomponer caracteres (NFD) y quitar los de tipo 'Mark, Nonspacing' (Mn)
+        nf = unicodedata.normalize('NFD', texto)
+        sin_tildes = ''.join(ch for ch in nf if unicodedata.category(ch) != 'Mn')
+        return sin_tildes.lower()
 
     def handle_keyrelease(self, event):
-        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
+        # Ignorar teclas de navegación y enter/tab
+        if event.keysym in (
+            'Up', 'Down', 'Return', 'Tab',
+            'Left', 'Right', 'Home', 'End',
+            'Prior', 'Next'
+        ):
             return
 
+        # Guardar posición del cursor
         try:
             cursor_pos = self.index(tk.INSERT)
-        except:
+        except Exception:
             cursor_pos = 0
         
         valor_actual = self.get()
-        
+        valor_norm = self._normalizar(valor_actual)
+
         if valor_actual == '':
+            # Restaurar lista completa y cerrar menú
             self['values'] = self._lista_completa
-            self.tk.call('ttk::combobox::Post', self._w)
+            self.tk.call('ttk::combobox::Unpost', self._w)
         else:
-            filtrada = [item for item in self._lista_completa if valor_actual.lower() in item.lower()]
+            # Filtrar ignorando tildes
+            filtrada = []
+            for item in self._lista_completa:
+                item_norm = self._normalizar(item)
+                if valor_norm in item_norm:
+                    filtrada.append(item)
+
             self['values'] = filtrada
-            
-            if filtrada:
+
+            # Solo abrir menú si hay AL MENOS 3 caracteres y coincidencias
+            if len(valor_norm) >= 3 and filtrada:
                 self.tk.call('ttk::combobox::Post', self._w)
             else:
                 self.tk.call('ttk::combobox::Unpost', self._w)
         
+        # Restaurar posición del cursor y quitar selección
         try:
             self.icursor(cursor_pos)
-        except:
+            self.selection_clear(0, tk.END)
+        except Exception:
             pass
 
 # --- CLASE BOTÓN MODERNO ---
