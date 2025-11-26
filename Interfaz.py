@@ -514,39 +514,52 @@ class InterfazMetro2025:
         return candidatos_origen[0], candidatos_destino[0]
 
     def calcular_ruta(self):
+        #obtiene el nombre de la estación que se ha puesto en la caja
         origen_nombre = self.combo_origen.get()
         destino_nombre = self.combo_destino.get()
+        #si no se ha puesto origen o destino, se detiene el proceso y muestra un mensaje
         if not origen_nombre or not destino_nombre:
-            messagebox.showinfo("Ups", "Selecciona origen y destino.")
+            messagebox.showinfo("Error", "Selecciona origen y destino.")
             return
-
+        #obtiene el la mejor pareja
         id_origen, id_destino = self.obtener_mejor_nodo(origen_nombre, destino_nombre)
+        #si no se encuentra da error
         if not id_origen or not id_destino:
             messagebox.showerror("Error", "Estación no válida.")
             return
-
+        #usa A* para obtener los nodos de la ruta mas optima y la distancia total
         ruta, costo_metros = self.buscador.encontrar_ruta(id_origen, id_destino)
+        #dibuja el mapa
         self.dibujar_mapa()
+        #si no se encuentra ruta muestra un mensaje
         if not ruta:
             self.mostrar_info("No se encontró ruta.")
             return
 
+        #contadores de paradas y transbordos
         num_paradas = 0
         num_transbordos = 0
+        #selecciona la linea actual(la primera linea)
         linea_actual = ruta[0].split('_')[-1]
+        #recorre la ruta
         for i in range(1, len(ruta)):
             linea_nueva = ruta[i].split('_')[-1]
+            #si hay un transbordo cambio de linea
             if linea_nueva != linea_actual:
                 num_transbordos += 1
                 linea_actual = linea_nueva
             else:
+                #si no hay transbordo aumento las paradas
                 num_paradas += 1
         
+        #calcula el tiempo estimado
         tiempo_viaje = (costo_metros / 580) + (num_paradas * 0.5) + (num_transbordos * 4)
         if self.hora_punta_var.get(): tiempo_viaje *= 1.5
+        #redondeo(quito decimales)
         tiempo_viaje = int(math.ceil(tiempo_viaje))
-
+        #muestra el tiempo las paradas y los trasbordos
         self.mostrar_pasos_detallados(ruta, costo_metros, tiempo_viaje)
+        #hago la animación de la ruta
         self.animar_ruta(ruta, 0)
 
     #Muestra al usuario la ruta optima del algoritmo,identificando transbordos 
