@@ -671,7 +671,7 @@ class InterfazMetro2025:
             x2, y2 = self.coords_gui[v]
             color = "#22D3EE" if self.modo_oscuro else "#0284C7"
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=4, capstyle=tk.ROUND)
-        self.root.after(60, lambda: self.animar_ruta(ruta, index + 1))
+        self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
 
 if __name__ == "__main__":
     root = tk.Tk()
