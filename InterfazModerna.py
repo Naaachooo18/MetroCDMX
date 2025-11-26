@@ -94,6 +94,7 @@ class BuscadorInteligente(tk.Frame):
         self.lista_completa = lista_completa
         self.var = tk.StringVar()
         
+        # Configuración fija Oscura
         self.entry = tk.Entry(self, textvariable=self.var, font=font, 
                             relief="flat", bg="#334155", fg="white", insertbackground="white")
         self.entry.pack(fill=tk.X, ipady=8, padx=10)
@@ -136,6 +137,7 @@ class BuscadorInteligente(tk.Frame):
             self.listbox_window = tk.Toplevel(self)
             self.listbox_window.wm_overrideredirect(True)
             self.listbox_window.wm_attributes("-topmost", True)
+            # Colores fijos oscuros para la lista
             self.listbox = tk.Listbox(self.listbox_window, font=("Segoe UI", 10),
                                     bg="#1E293B", fg="white", selectbackground="#2563EB",
                                     relief="flat", borderwidth=0, height=5)
@@ -198,17 +200,11 @@ class BuscadorInteligente(tk.Frame):
             pass
             
     def actualizar_colores(self, bg_input, fg_input, bg_panel=None):
-        # Configurar el input
         self.entry.config(bg=bg_input, fg=fg_input, insertbackground=fg_input)
-        
-        # Configurar el marco contenedor para que no se vea borde blanco
         if bg_panel:
             self.config(bg=bg_panel)
-            
-        # Configurar la lista desplegable
         if self.listbox_window:
-            self.listbox.config(bg="#1E293B" if bg_input=="#334155" else "white", 
-                              fg="white" if bg_input=="#334155" else "black")
+            self.listbox.config(bg="#1E293B", fg="white")
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
@@ -255,12 +251,26 @@ class InterfazMetro2025:
         
         self.mapa_logico = Mapa()
         self.buscador = AEstrella(self.mapa_logico)
-        self.modo_oscuro = True 
         
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
 
-        # DATOS REFERENCIA
+        # --- COLORES FIJOS (MODO OSCURO ÚNICO) ---
+        self.colores = {
+            "bg_app": "#0F172A", 
+            "bg_panel": "#1E293B", 
+            "text_primary": "#F8FAFC", 
+            "text_secondary": "#94A3B8", 
+            "map_bg": "#0F172A", 
+            "line_inactive": "#334155", 
+            "node_fill": "#1E293B", 
+            "node_outline": "#94A3B8", 
+            "text_map": "#CBD5E1"
+        }
+
+        self.lineas_color = { "L1": "#EC4899", "L3": "#84CC16", "L7": "#F97316", "L9": "#A97142", "L12": "#EAB308" }
+        self.info_lineas = { "L1": "Línea 1", "L3": "Línea 3", "L7": "Línea 7", "L9": "Línea 9", "L12": "Línea 12" }
+
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac",
             "San_Antonio_L7": "San Antonio", "San_Pedro_de_los_Pinos_L7": "San Pedro", 
@@ -300,17 +310,10 @@ class InterfazMetro2025:
             "L12": {"izq": "Mixcoac", "der": "Tláhuac"}
         }
 
-        self.colores = {
-            "claro": { "bg_app": "#F3F4F6", "bg_panel": "#FFFFFF", "text_primary": "#111827", "text_secondary": "#6B7280", "map_bg": "#FFFFFF", "line_inactive": "#E5E7EB", "node_fill": "white", "node_outline": "#374151", "text_map": "#374151" },
-            "oscuro": { "bg_app": "#0F172A", "bg_panel": "#1E293B", "text_primary": "#F8FAFC", "text_secondary": "#94A3B8", "map_bg": "#0F172A", "line_inactive": "#334155", "node_fill": "#1E293B", "node_outline": "#94A3B8", "text_map": "#CBD5E1" }
-        }
-        self.lineas_color = { "L1": "#EC4899", "L3": "#84CC16", "L7": "#F97316", "L9": "#A97142", "L12": "#EAB308" }
-        self.info_lineas = { "L1": "Línea 1", "L3": "Línea 3", "L7": "Línea 7", "L9": "Línea 9", "L12": "Línea 12" }
-
         self.coords_gui = Placements.COORDS_GUI
 
         self.crear_layout()
-        self.aplicar_tema()
+        self.aplicar_tema_fijo()
 
     def crear_layout(self):
         self.main_container = tk.Frame(self.root)
@@ -325,9 +328,7 @@ class InterfazMetro2025:
         self.lbl_sublogo = tk.Label(self.sidebar, text="Planificador Inteligente", font=("Segoe UI", 11), anchor="w")
         self.lbl_sublogo.pack(fill=tk.X, pady=(0, 40))
 
-        # --- SIN LÍNEAS BLANCAS: USAMOS PADDING ---
         self.crear_buscador("Punto de Partida", "origen")
-        # pady=(arriba, abajo) da el espacio sin crear frames vacíos
         self.crear_buscador("Destino Final", "destino", padding=(20, 0))
 
         self.chk_hora_punta = tk.Checkbutton(self.sidebar, text=" Hora Punta ⚠️", variable=self.hora_punta_var,
@@ -345,9 +346,6 @@ class InterfazMetro2025:
         self.txt_pasos.pack(fill=tk.BOTH, expand=True)
         self.configurar_tags_texto()
 
-        self.btn_tema = tk.Button(self.sidebar, text="Cambiar Tema 🌓", command=self.cambiar_tema, relief="flat", cursor="hand2", font=("Segoe UI", 10))
-        self.btn_tema.pack(side=tk.BOTTOM, anchor="w")
-
         self.map_frame = tk.Frame(self.main_container)
         self.map_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.canvas = tk.Canvas(self.map_frame, highlightthickness=0)
@@ -357,13 +355,13 @@ class InterfazMetro2025:
 
     def crear_buscador(self, titulo, var_name, padding=(0, 0)):
         lbl = tk.Label(self.sidebar, text=titulo, font=("Segoe UI", 10, "bold"), anchor="w")
-        lbl.pack(fill=tk.X, pady=(padding[0], 8)) # Padding superior aquí
+        lbl.pack(fill=tk.X, pady=(padding[0], 8)) 
         if var_name == "origen": self.lbl_origen = lbl
         else: self.lbl_destino = lbl
 
-        bg_color = "#1E293B" if self.modo_oscuro else "#FFFFFF"
+        bg_color = "#1E293B" 
         cb = BuscadorInteligente(self.sidebar, self.lista_estaciones, bg=bg_color)
-        cb.pack(fill=tk.X, pady=(0, padding[1])) # Padding inferior aquí
+        cb.pack(fill=tk.X, pady=(0, padding[1])) 
         
         if var_name == "origen": self.combo_origen = cb
         else: self.combo_destino = cb
@@ -376,12 +374,8 @@ class InterfazMetro2025:
         self.txt_pasos.tag_config("pasos", lmargin1=15, lmargin2=15)
         self.txt_pasos.tag_config("alerta", foreground="#EF4444", font=("Segoe UI", 10, "italic"))
 
-    def cambiar_tema(self):
-        self.modo_oscuro = not self.modo_oscuro
-        self.aplicar_tema()
-
-    def aplicar_tema(self):
-        t = self.colores["oscuro"] if self.modo_oscuro else self.colores["claro"]
+    def aplicar_tema_fijo(self):
+        t = self.colores
         self.root.config(bg=t["bg_app"])
         self.main_container.config(bg=t["bg_app"])
         self.sidebar.config(bg=t["bg_panel"])
@@ -389,19 +383,19 @@ class InterfazMetro2025:
         self.canvas.config(bg=t["map_bg"])
         
         for l in [self.lbl_logo, self.lbl_res_titulo]: l.config(bg=t["bg_panel"], fg=t["text_primary"])
-        for l in [self.lbl_sublogo, self.lbl_origen, self.lbl_destino, self.btn_tema]: l.config(bg=t["bg_panel"], fg=t["text_secondary"])
+        for l in [self.lbl_sublogo, self.lbl_origen, self.lbl_destino]: l.config(bg=t["bg_panel"], fg=t["text_secondary"])
         
         self.txt_pasos.config(bg=t["bg_app"], fg=t["text_primary"])
         self.chk_hora_punta.config(bg=t["bg_panel"], fg=t["text_primary"], selectcolor=t["bg_panel"], activebackground=t["bg_panel"])
 
-        bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
-        fg_input = "white" if self.modo_oscuro else "#111827"
+        bg_input = "#334155"
+        fg_input = "white"
         
         self.combo_origen.actualizar_colores(bg_input, fg_input, t["bg_panel"])
         self.combo_destino.actualizar_colores(bg_input, fg_input, t["bg_panel"])
         
-        btn_bg = "#818CF8" if self.modo_oscuro else "#4F46E5"
-        btn_hover = "#6366F1" if self.modo_oscuro else "#4338CA"
+        btn_bg = "#818CF8"
+        btn_hover = "#6366F1"
         self.btn_calc.update_colors(t["bg_panel"], btn_bg, btn_hover)
 
         self.dibujar_mapa()
@@ -441,7 +435,7 @@ class InterfazMetro2025:
 
     def dibujar_mapa(self):
         self.canvas.delete("all")
-        t = self.colores["oscuro"] if self.modo_oscuro else self.colores["claro"]
+        t = self.colores
         grafo = self.mapa_logico.get_grafo()
         
         scale, dx, dy = self.obtener_transformacion()
@@ -503,7 +497,7 @@ class InterfazMetro2025:
                 self.canvas.tag_bind(item_id, "<Leave>", lambda e, i=item_id: self.on_hover_leave(e, i))
 
     def on_hover_enter(self, event, nodo_id, item_id):
-        self.canvas.itemconfig(item_id, width=3, outline=self.colores["oscuro" if self.modo_oscuro else "claro"]["text_primary"])
+        self.canvas.itemconfig(item_id, width=3, outline=self.colores["text_primary"])
         nombre = self.nombres_mapa.get(nodo_id, nodo_id.split('_')[0])
         linea = nodo_id.split('_')[-1]
         info = f"{nombre}\n{self.info_lineas.get(linea, linea)}"
@@ -511,7 +505,7 @@ class InterfazMetro2025:
         self.tooltip.showtip(info)
 
     def on_hover_leave(self, event, item_id):
-        t = self.colores["oscuro"] if self.modo_oscuro else self.colores["claro"]
+        t = self.colores
         self.canvas.itemconfig(item_id, width=1.5, outline=t["node_outline"])
         if hasattr(self, 'tooltip'): self.tooltip.hidetip()
 
@@ -633,7 +627,7 @@ class InterfazMetro2025:
             x = x_base * scale + dx
             y = y_base * scale + dy
             r = 9 * scale
-            borde = "white" if self.modo_oscuro else "black"
+            borde = "white" # Always white border in dark mode
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
     def animar_ruta(self, ruta, index):
@@ -657,7 +651,7 @@ class InterfazMetro2025:
             y1 = y1_base * scale + dy
             x2 = x2_base * scale + dx
             y2 = y2_base * scale + dy
-            color = "#22D3EE" if self.modo_oscuro else "#0284C7"
+            color = "#22D3EE" # Cyan for dark mode
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5*scale, capstyle=tk.ROUND)
         
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
