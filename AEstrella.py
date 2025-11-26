@@ -10,7 +10,7 @@ class AEstrella:
         self.posiciones = mapa_objeto.get_posiciones()
 
     def heuristica_haversine(self, nodo_actual, nodo_destino):
-        # Funcion heurística f(n)
+        # Funcion heurística h(n)
         # Calcula la distancia en linea recta entre dos estaciones
         # Se utiliza la fomrula de Haversine ya que la tierra al ser redonda las 
         # distancia no se pueden calcular de manera lineas.
