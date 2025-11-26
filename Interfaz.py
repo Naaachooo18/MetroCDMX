@@ -498,26 +498,38 @@ class InterfazMetro2025:
 
 
     def get_direccion_linea(self, u, v, linea):
+           #si la estación no tiene coordenadas, no se puede calcular
         if u not in Placements.COORDS_GUI or v not in Placements.COORDS_GUI: return ""
+        #si la linea no tiene terminales no se puede saber la dirección
         if linea not in self.terminales: return ""
+        #coordenadas de la estación actual y la siguiente
         xu, yu = Placements.COORDS_GUI[u]
         xv, yv = Placements.COORDS_GUI[v]
+        #ver hacia donde se mueve el tren(movimiento horizontal y vertical)
         dx = xv - xu
         dy = yv - yu
+        #obtener las terminales
         terms = self.terminales[linea]
+        #desplazamientos orizontales y verticales   
         if linea in ["L1", "L9", "L12"]: return terms["der"] if dx > 0 else terms["izq"]
         elif linea in ["L3", "L7"]: return terms["abajo"] if dy > 0 else terms["arriba"]
         return ""
 
+    #obtiene los nodos internos de una estación
     def obtener_mejor_nodo(self, nombre_origen, nombre_destino):
+        #obtiene nodos origen y destino
         candidatos_origen = self.mapa_nombres_reales.get(nombre_origen)
         candidatos_destino = self.mapa_nombres_reales.get(nombre_destino)
+        #si no existen no se puede calcular la ruta
         if not candidatos_origen or not candidatos_destino: return None, None
+        #mira si el nodo origen y destino estan en la misma linea
         for u in candidatos_origen:
             linea_u = u.split('_')[-1]
             for v in candidatos_destino:
                 linea_v = v.split('_')[-1]
+                #si estan en la misma linea se eligen esos nodos como el mejor par
                 if linea_u == linea_v: return u, v
+        #si no comparten linea, hay que hacer transbordo,se toma el primer candidato de cada lista
         return candidatos_origen[0], candidatos_destino[0]
 
     def calcular_ruta(self):
@@ -631,9 +643,12 @@ class InterfazMetro2025:
             #Dibuja el ovalo resaltado
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
+    #Crea un efecto de animacion de la ruta seguida por el usuario
     def animar_ruta(self, ruta, index):
         scale, dx, dy = self.obtener_transformacion()
+        #Si llega al penultim nodo para
         if index >= len(ruta) - 1: 
+            #Marca el nodo destino de rojo
             self.resaltar_nodo(ruta[-1], "#EF4444", scale, dx, dy) 
             return
 
@@ -642,7 +657,9 @@ class InterfazMetro2025:
         nombre_u = u.rsplit('_', 1)[0]
         nombre_v = v.rsplit('_', 1)[0]
         
+        #Resalta el nodo origen
         if index == 0: self.resaltar_nodo(u, "#3B82F6", scale, dx, dy)
+        #Resalta transbordos
         elif nombre_u == nombre_v: self.resaltar_nodo(u, "#FACC15", scale, dx, dy)
 
         if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
@@ -652,16 +669,22 @@ class InterfazMetro2025:
             y1 = y1_base * scale + dy
             x2 = x2_base * scale + dx
             y2 = y2_base * scale + dy
-            color = "#22D3EE"
+            color = "#22D3EE"#Color de la ruta del ususario
+            #Dibuja el segmento de la linea resaltada
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5*scale, capstyle=tk.ROUND)
-        
+            
+        #Llama al siguient segmento  pasados 150ms
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
 
+#EJECUCIÓN PRINCIPAL
 if __name__ == "__main__":
+    #Crea la ventana princiapl
     root = tk.Tk()
     try:
         from ctypes import windll
         windll.shcore.SetProcessDpiAwareness(1)
     except: pass
+    #Instancia  la aplicacion del metro
     app = InterfazMetro2025(root)
+    #Inicia el bucle de eventos
     root.mainloop()
