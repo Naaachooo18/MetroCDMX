@@ -67,10 +67,11 @@ class Placements:# coordenadas base
 
 #creamos un tooltip para poder pasar el ratón por un nodo y que nos muestre información
 class ToolTip:
+    # Constructor de la clase
     def __init__(self, widget):
         self.widget = widget
         self.tipwindow = None
-
+    # Calcula la posición del cursor despliega una ventana flotante sin bordes
     def showtip(self, text):
         if self.tipwindow or not text: return
         x = self.widget.winfo_pointerx() + 15
@@ -80,7 +81,7 @@ class ToolTip:
         tw.wm_geometry(f"+{x}+{y}")
         label = tk.Label(tw, text=text, justify=tk.LEFT, background="#1F2937", fg="#F3F4F6", relief=tk.SOLID, borderwidth=0, font=("Segoe UI", 9), padx=8, pady=4)
         label.pack()
-
+    # Cierra y destruye la ventana del tooltip si está visible
     def hidetip(self):
         if self.tipwindow:
             self.tipwindow.destroy()
@@ -88,6 +89,7 @@ class ToolTip:
 
 # --- BUSCADOR INTELIGENTE ---
 class BuscadorInteligente(tk.Frame):
+    # Inicializa el widget, configura el campo de entrada y vincula los eventos de teclado y foco
     def __init__(self, parent, lista_completa, font=("Segoe UI", 11), **kwargs):
         super().__init__(parent, **kwargs)
         self.lista_completa = lista_completa
@@ -100,12 +102,12 @@ class BuscadorInteligente(tk.Frame):
         self.entry.bind('<Up>', self.mover_arriba)
         self.entry.bind('<Return>', self.seleccionar_tecla)
         self.listbox_window = None
-
+    # Elimina acentos y convierte a minúsculas para facilitar la búsqueda
     def _normalizar(self, texto: str) -> str:
         if texto is None: return ""
         nf = unicodedata.normalize('NFD', texto)
         return ''.join(ch for ch in nf if unicodedata.category(ch) != 'Mn').lower()
-
+    # Filtra la lista de opciones basándose en el texto escrito por el usuario.
     def on_keyrelease(self, event):
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right'): return
         valor = self.var.get()
@@ -114,7 +116,7 @@ class BuscadorInteligente(tk.Frame):
             valor_norm = self._normalizar(valor)
             filtrada = [item for item in self.lista_completa if valor_norm in self._normalizar(item)]
             self.mostrar_lista(filtrada)
-
+    # Muestra o actualiza la ventana flotante con las sugerencias filtradas debajo
     def mostrar_lista(self, items):
         if not items:
             self.ocultar_lista()
@@ -134,28 +136,28 @@ class BuscadorInteligente(tk.Frame):
         y = self.entry.winfo_rooty() + self.entry.winfo_height()
         w = self.entry.winfo_width()
         self.listbox_window.wm_geometry(f"{w}x{150}+{x}+{y}")
-
+    # Cierra la ventana de sugerencias si está abierta
     def ocultar_lista(self):
         if self.listbox_window:
             self.listbox_window.destroy()
             self.listbox_window = None
-
+    # Maneja la selección de un elemento mediante clic del ratón
     def on_select_click(self, event):
         if not self.listbox.curselection(): return
         self.set_value(self.listbox.get(self.listbox.curselection()[0]))
-
+    # Maneja la selección de un elemento mediante la tecla Enter
     def seleccionar_tecla(self, event):
         if self.listbox_window and self.listbox.curselection():
             self.set_value(self.listbox.get(self.listbox.curselection()[0]))
-
+    # Establece el valor seleccionado en el campo de entrada y cierra la lista
     def set_value(self, valor):
         self.var.set(valor)
         self.entry.icursor(tk.END)
         self.ocultar_lista()
-
+    # Retorna el texto actual del campo de entrada
     def get(self):
         return self.var.get()
-
+    # Transfieren el foco a la lista para permitir la navegación con las flechas
     def mover_abajo(self, event):
         if self.listbox_window:
             self.listbox.focus_set()
@@ -165,7 +167,7 @@ class BuscadorInteligente(tk.Frame):
         if self.listbox_window:
             self.listbox.focus_set()
             self.listbox.selection_set(0)
-
+    # Gestionan el cierre de la lista cuando el usuario hace clic fuera del widget
     def on_focus_out(self, event):
         self.after(200, self.check_focus)
 
@@ -174,7 +176,7 @@ class BuscadorInteligente(tk.Frame):
             focus = self.focus_get()
             if focus != self.listbox and focus != self.entry: self.ocultar_lista()
         except: pass
-            
+    # Actualiza la configuración de colores del widget
     def actualizar_colores(self, bg_input, fg_input, bg_panel=None):
         self.entry.config(bg=bg_input, fg=fg_input, insertbackground=fg_input)
         if bg_panel: self.config(bg=bg_panel)
@@ -182,6 +184,7 @@ class BuscadorInteligente(tk.Frame):
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
+    # Inicializa el lienzo, dibuja la forma redondeada y el texto, y vincula los eventos del ratón
     def __init__(self, parent, text, command, width=200, height=50, bg_color="#2563EB", text_color="white", hover_color="#1D4ED8"):
         super().__init__(parent, width=width, height=height, bg=parent['bg'], highlightthickness=0)
         self.command = command
@@ -192,21 +195,21 @@ class BotonModerno(tk.Canvas):
         self.bind("<Enter>", self.on_enter)
         self.bind("<Leave>", self.on_leave)
         self.bind("<Button-1>", self.on_click)
-
+    # Dibuja un polígono que simula un rectángulo con esquinas redondeadas
     def create_rounded_rect(self, x1, y1, x2, y2, r, **kwargs):
         points = (x1+r, y1, x1+r, y1, x2-r, y1, x2-r, y1, x2, y1, x2, y1+r, x2, y1+r, x2, y2-r, x2, y2-r, x2, y2, x2-r, y2, x2-r, y2, x1+r, y2, x1+r, y2, x1, y2, x1, y2-r, x1, y2-r, x1, y1+r, x1, y1+r, x1, y1)
         return self.create_polygon(points, **kwargs, smooth=True)
-
+    # Cambia el color y el ratón cuando entra en el botón (hover)
     def on_enter(self, e):
         self.itemconfig(self.rect, fill=self.hover_color)
         self.config(cursor="hand2")
-
+    # Restaura el ratón y el color del botón
     def on_leave(self, e):
         self.itemconfig(self.rect, fill=self.bg_color)
-
+    # Ejecuta la función asignada cuando se hace clic en el botón
     def on_click(self, e):
         if self.command: self.command()
-
+    # Actualiza los colores del botón y del fondo
     def update_colors(self, parent_bg, btn_bg, btn_hover):
         self.config(bg=parent_bg)
         self.bg_color = btn_bg
@@ -215,6 +218,7 @@ class BotonModerno(tk.Canvas):
 
 # --- INTERFAZ PRINCIPAL ---
 class InterfazMetro2025:
+    # Inicializa la ventana, carga la lógica del mapa y prepara los diccionarios y estilos visuales
     def __init__(self, root):
         self.root = root
         self.root.title("Metro CDMX • Navigator 2025")
@@ -275,7 +279,7 @@ class InterfazMetro2025:
 
         self.crear_layout()
         self.aplicar_tema_fijo()
-
+    # Divide la ventana en panel lateral con los conotroles y el mapa
     def crear_layout(self):
         self.main_container = tk.Frame(self.root)
         self.main_container.pack(fill=tk.BOTH, expand=True)
@@ -312,7 +316,7 @@ class InterfazMetro2025:
         self.canvas = tk.Canvas(self.map_frame, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.bind("<Configure>", self.redimensionar_mapa)
-
+    # Método auxiliar para instanciar los widgets de la búsqueda y evitar la duplicidad del código
     def crear_buscador(self, titulo, var_name, padding=(0, 0)):
         lbl = tk.Label(self.sidebar, text=titulo, font=("Segoe UI", 10, "bold"), anchor="w")
         lbl.pack(fill=tk.X, pady=(padding[0], 8)) 
@@ -323,7 +327,7 @@ class InterfazMetro2025:
         cb.pack(fill=tk.X, pady=(0, padding[1])) 
         if var_name == "origen": self.combo_origen = cb
         else: self.combo_destino = cb
-
+    # Define los estilos de formato para el texto de la ruta
     def configurar_tags_texto(self):
         self.txt_pasos.tag_config("titulo", font=("Segoe UI", 11, "bold"))
         self.txt_pasos.tag_config("meta", foreground="#888")
@@ -331,7 +335,7 @@ class InterfazMetro2025:
         self.txt_pasos.tag_config("transbordo", foreground="#EF4444", font=("Segoe UI", 10, "bold"))
         self.txt_pasos.tag_config("pasos", lmargin1=15, lmargin2=15)
         self.txt_pasos.tag_config("alerta", foreground="#EF4444", font=("Segoe UI", 10, "italic"))
-
+    # Aplica la misma paleta de colores a todos los elementos
     def aplicar_tema_fijo(self):
         t = self.colores
         self.root.config(bg=t["bg_app"])
@@ -350,10 +354,10 @@ class InterfazMetro2025:
         self.combo_destino.actualizar_colores("#334155", "white", t["bg_panel"])
         self.btn_calc.update_colors(t["bg_panel"], "#818CF8", "#6366F1")
         self.dibujar_mapa()
-
+    # Cambia el tamaño del mapa cuando reajustas el tamaño de la ventana
     def redimensionar_mapa(self, event):
         self.dibujar_mapa()
-
+    # Calcula la escala y el centrado para ajustar las coordenadas al tamaño actual del canvas
     def obtener_transformacion(self):
         w_actual = self.canvas.winfo_width()
         h_actual = self.canvas.winfo_height()
