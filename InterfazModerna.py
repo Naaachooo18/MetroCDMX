@@ -6,23 +6,27 @@ import unicodedata
 from Mapa import Mapa
 from AEstrella import AEstrella
 
-# --- CONFIGURACIÓN ESTÁTICA ---
+# --- CONFIGURACIÓN ESTÁTICA (COORDENADAS Y ÁNGULOS) ---
 class Placements:
     BASE_WIDTH = 800
     BASE_HEIGHT = 800
 
     COORDS_GUI = {
+        # L7 (Naranja)
         "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
         "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
         "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
         "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
+        # L1 (Rosa)
         "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
         "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
         "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
         "Cuauhtemoc_L1": (530, 280), "Balderas_L1": (600, 280),      
+        # L9 (Marrón)
         "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
         "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
         "Lazaro_Cardenas_L9": (620, 380),
+        # L3 (Verde)
         "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
         "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
         "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
@@ -30,6 +34,7 @@ class Placements:
         "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
         "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (550, 320),  
         "Balderas_L3": (600, 280), "Juarez_L3": (600, 200),
+        # L12 (Dorada)
         "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
         "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
         "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
@@ -66,8 +71,6 @@ class ToolTip:
     def __init__(self, widget):
         self.widget = widget
         self.tipwindow = None
-        self.id = None
-        self.x = self.y = 0
 
     def showtip(self, text):
         if self.tipwindow or not text: return
@@ -75,17 +78,14 @@ class ToolTip:
         y = self.widget.winfo_pointery() + 10
         self.tipwindow = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(1)
-        tw.wm_geometry("+%d+%d" % (x, y))
-        label = tk.Label(tw, text=text, justify=tk.LEFT,
-                       background="#1F2937", fg="#F3F4F6",
-                       relief=tk.SOLID, borderwidth=0,
-                       font=("Segoe UI", 9), padx=8, pady=4)
+        tw.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(tw, text=text, justify=tk.LEFT, background="#1F2937", fg="#F3F4F6", relief=tk.SOLID, borderwidth=0, font=("Segoe UI", 9), padx=8, pady=4)
         label.pack()
 
     def hidetip(self):
-        tw = self.tipwindow
-        self.tipwindow = None
-        if tw: tw.destroy()
+        if self.tipwindow:
+            self.tipwindow.destroy()
+            self.tipwindow = None
 
 # --- BUSCADOR INTELIGENTE ---
 class BuscadorInteligente(tk.Frame):
@@ -93,40 +93,27 @@ class BuscadorInteligente(tk.Frame):
         super().__init__(parent, **kwargs)
         self.lista_completa = lista_completa
         self.var = tk.StringVar()
-        
-        # Configuración fija Oscura
-        self.entry = tk.Entry(self, textvariable=self.var, font=font, 
-                            relief="flat", bg="#334155", fg="white", insertbackground="white")
+        self.entry = tk.Entry(self, textvariable=self.var, font=font, relief="flat", bg="#334155", fg="white", insertbackground="white")
         self.entry.pack(fill=tk.X, ipady=8, padx=10)
-        
         self.entry.bind('<KeyRelease>', self.on_keyrelease)
         self.entry.bind('<FocusOut>', self.on_focus_out)
         self.entry.bind('<Down>', self.mover_abajo)
         self.entry.bind('<Up>', self.mover_arriba)
         self.entry.bind('<Return>', self.seleccionar_tecla)
-
         self.listbox_window = None
 
     def _normalizar(self, texto: str) -> str:
         if texto is None: return ""
         nf = unicodedata.normalize('NFD', texto)
-        sin_tildes = ''.join(ch for ch in nf if unicodedata.category(ch) != 'Mn')
-        return sin_tildes.lower()
+        return ''.join(ch for ch in nf if unicodedata.category(ch) != 'Mn').lower()
 
     def on_keyrelease(self, event):
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right'): return
-        
         valor = self.var.get()
-        valor_norm = self._normalizar(valor)
-        
-        if valor == '':
-            self.ocultar_lista()
+        if valor == '': self.ocultar_lista()
         else:
-            filtrada = []
-            for item in self.lista_completa:
-                item_norm = self._normalizar(item)
-                if valor_norm in item_norm:
-                    filtrada.append(item)
+            valor_norm = self._normalizar(valor)
+            filtrada = [item for item in self.lista_completa if valor_norm in self._normalizar(item)]
             self.mostrar_lista(filtrada)
 
     def mostrar_lista(self, items):
@@ -137,16 +124,12 @@ class BuscadorInteligente(tk.Frame):
             self.listbox_window = tk.Toplevel(self)
             self.listbox_window.wm_overrideredirect(True)
             self.listbox_window.wm_attributes("-topmost", True)
-            # Colores fijos oscuros para la lista
-            self.listbox = tk.Listbox(self.listbox_window, font=("Segoe UI", 10),
-                                    bg="#1E293B", fg="white", selectbackground="#2563EB",
-                                    relief="flat", borderwidth=0, height=5)
+            self.listbox = tk.Listbox(self.listbox_window, font=("Segoe UI", 10), bg="#1E293B", fg="white", selectbackground="#2563EB", relief="flat", borderwidth=0, height=5)
             self.listbox.pack(fill=tk.BOTH, expand=True)
             self.listbox.bind('<<ListboxSelect>>', self.on_select_click)
 
         self.listbox.delete(0, tk.END)
-        for item in items:
-            self.listbox.insert(tk.END, item)
+        for item in items: self.listbox.insert(tk.END, item)
 
         x = self.entry.winfo_rootx()
         y = self.entry.winfo_rooty() + self.entry.winfo_height()
@@ -160,15 +143,11 @@ class BuscadorInteligente(tk.Frame):
 
     def on_select_click(self, event):
         if not self.listbox.curselection(): return
-        index = self.listbox.curselection()[0]
-        valor = self.listbox.get(index)
-        self.set_value(valor)
+        self.set_value(self.listbox.get(self.listbox.curselection()[0]))
 
     def seleccionar_tecla(self, event):
         if self.listbox_window and self.listbox.curselection():
-            index = self.listbox.curselection()[0]
-            valor = self.listbox.get(index)
-            self.set_value(valor)
+            self.set_value(self.listbox.get(self.listbox.curselection()[0]))
 
     def set_value(self, valor):
         self.var.set(valor)
@@ -194,17 +173,13 @@ class BuscadorInteligente(tk.Frame):
     def check_focus(self):
         try:
             focus = self.focus_get()
-            if focus != self.listbox and focus != self.entry:
-                self.ocultar_lista()
-        except:
-            pass
+            if focus != self.listbox and focus != self.entry: self.ocultar_lista()
+        except: pass
             
     def actualizar_colores(self, bg_input, fg_input, bg_panel=None):
         self.entry.config(bg=bg_input, fg=fg_input, insertbackground=fg_input)
-        if bg_panel:
-            self.config(bg=bg_panel)
-        if self.listbox_window:
-            self.listbox.config(bg="#1E293B", fg="white")
+        if bg_panel: self.config(bg=bg_panel)
+        if self.listbox_window: self.listbox.config(bg="#1E293B", fg="white")
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
@@ -255,19 +230,10 @@ class InterfazMetro2025:
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
 
-        # --- COLORES FIJOS (MODO OSCURO ÚNICO) ---
         self.colores = {
-            "bg_app": "#0F172A", 
-            "bg_panel": "#1E293B", 
-            "text_primary": "#F8FAFC", 
-            "text_secondary": "#94A3B8", 
-            "map_bg": "#0F172A", 
-            "line_inactive": "#334155", 
-            "node_fill": "#1E293B", 
-            "node_outline": "#94A3B8", 
-            "text_map": "#CBD5E1"
+            "bg_app": "#0F172A", "bg_panel": "#1E293B", "text_primary": "#F8FAFC", "text_secondary": "#94A3B8", 
+            "map_bg": "#0F172A", "line_inactive": "#334155", "node_fill": "#1E293B", "node_outline": "#94A3B8", "text_map": "#CBD5E1"
         }
-
         self.lineas_color = { "L1": "#EC4899", "L3": "#84CC16", "L7": "#F97316", "L9": "#A97142", "L12": "#EAB308" }
         self.info_lineas = { "L1": "Línea 1", "L3": "Línea 3", "L7": "Línea 7", "L9": "Línea 9", "L12": "Línea 12" }
 
@@ -282,10 +248,9 @@ class InterfazMetro2025:
             "Cuauhtemoc_L1": "Cuauhtémoc", "Balderas_L1": "Balderas",
             "Tacubaya_L9": "Tacubaya", "Patriotismo_L9": "Patriotismo",
             "Chilpancingo_L9": "Chilpancingo", "Centro_Medico_L9": "Centro Médico",
-            "Lazaro_Cardenas_L9": "Lázaro Cárdenas", 
-            "Universidad_L3": "Universidad", "Copilco_L3": "Copilco",
-            "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", "Viveros_L3": "Viveros",
-            "Coyoacan_L3": "Coyoacán", "Zapata_L3": "Zapata",
+            "Lazaro_Cardenas_L9": "Lázaro Cárdenas", "Universidad_L3": "Universidad", 
+            "Copilco_L3": "Copilco", "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", 
+            "Viveros_L3": "Viveros", "Coyoacan_L3": "Coyoacán", "Zapata_L3": "Zapata",
             "Division_del_Norte_L3": "División del N.", "Eugenia_L3": "Eugenia",
             "Etiopia_L3": "Etiopía", "Centro_Medico_L3": "Centro Médico",
             "Hospital_General_L3": "Hosp. General", "Ninos_Heroes_L3": "Niños Héroes",          
@@ -301,7 +266,6 @@ class InterfazMetro2025:
             if nombre_bonito not in self.mapa_nombres_reales:
                 self.mapa_nombres_reales[nombre_bonito] = []
             self.mapa_nombres_reales[nombre_bonito].append(nodo)
-        
         self.lista_estaciones = sorted(list(self.mapa_nombres_reales.keys()))
 
         self.terminales = {
@@ -309,8 +273,6 @@ class InterfazMetro2025:
             "L7": {"arriba": "El Rosario", "abajo": "Barranca del Muerto"}, "L9": {"izq": "Tacubaya", "der": "Pantitlán"},
             "L12": {"izq": "Mixcoac", "der": "Tláhuac"}
         }
-
-        self.coords_gui = Placements.COORDS_GUI
 
         self.crear_layout()
         self.aplicar_tema_fijo()
@@ -350,7 +312,6 @@ class InterfazMetro2025:
         self.map_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.canvas = tk.Canvas(self.map_frame, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        
         self.canvas.bind("<Configure>", self.redimensionar_mapa)
 
     def crear_buscador(self, titulo, var_name, padding=(0, 0)):
@@ -359,10 +320,8 @@ class InterfazMetro2025:
         if var_name == "origen": self.lbl_origen = lbl
         else: self.lbl_destino = lbl
 
-        bg_color = "#1E293B" 
-        cb = BuscadorInteligente(self.sidebar, self.lista_estaciones, bg=bg_color)
+        cb = BuscadorInteligente(self.sidebar, self.lista_estaciones, bg="#1E293B")
         cb.pack(fill=tk.X, pady=(0, padding[1])) 
-        
         if var_name == "origen": self.combo_origen = cb
         else: self.combo_destino = cb
 
@@ -388,16 +347,9 @@ class InterfazMetro2025:
         self.txt_pasos.config(bg=t["bg_app"], fg=t["text_primary"])
         self.chk_hora_punta.config(bg=t["bg_panel"], fg=t["text_primary"], selectcolor=t["bg_panel"], activebackground=t["bg_panel"])
 
-        bg_input = "#334155"
-        fg_input = "white"
-        
-        self.combo_origen.actualizar_colores(bg_input, fg_input, t["bg_panel"])
-        self.combo_destino.actualizar_colores(bg_input, fg_input, t["bg_panel"])
-        
-        btn_bg = "#818CF8"
-        btn_hover = "#6366F1"
-        self.btn_calc.update_colors(t["bg_panel"], btn_bg, btn_hover)
-
+        self.combo_origen.actualizar_colores("#334155", "white", t["bg_panel"])
+        self.combo_destino.actualizar_colores("#334155", "white", t["bg_panel"])
+        self.btn_calc.update_colors(t["bg_panel"], "#818CF8", "#6366F1")
         self.dibujar_mapa()
 
     def redimensionar_mapa(self, event):
@@ -424,27 +376,24 @@ class InterfazMetro2025:
 
         visual_w = content_w * scale
         visual_h = content_h * scale
-        
         offset_x = (w_actual - visual_w) / 2
         offset_y = (h_actual - visual_h) / 2
         
         dx = offset_x - (min_x * scale)
         dy = offset_y - (min_y * scale)
-        
         return scale, dx, dy
 
     def dibujar_mapa(self):
         self.canvas.delete("all")
         t = self.colores
         grafo = self.mapa_logico.get_grafo()
-        
         scale, dx, dy = self.obtener_transformacion()
         drawn_names = set()
 
         for u, v in grafo.edges():
-            if u in self.coords_gui and v in self.coords_gui:
-                x1_b, y1_b = self.coords_gui[u]
-                x2_b, y2_b = self.coords_gui[v]
+            if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
+                x1_b, y1_b = Placements.COORDS_GUI[u]
+                x2_b, y2_b = Placements.COORDS_GUI[v]
                 x1 = x1_b * scale + dx
                 y1 = y1_b * scale + dy
                 x2 = x2_b * scale + dx
@@ -466,8 +415,8 @@ class InterfazMetro2025:
         font_size = max(6, min(font_size, 12)) 
 
         for nodo in grafo.nodes():
-            if nodo in self.coords_gui:
-                x_b, y_b = self.coords_gui[nodo]
+            if nodo in Placements.COORDS_GUI:
+                x_b, y_b = Placements.COORDS_GUI[nodo]
                 x = x_b * scale + dx
                 y = y_b * scale + dy
 
@@ -510,10 +459,10 @@ class InterfazMetro2025:
         if hasattr(self, 'tooltip'): self.tooltip.hidetip()
 
     def get_direccion_linea(self, u, v, linea):
-        if u not in self.coords_gui or v not in self.coords_gui: return ""
+        if u not in Placements.COORDS_GUI or v not in Placements.COORDS_GUI: return ""
         if linea not in self.terminales: return ""
-        xu, yu = self.coords_gui[u]
-        xv, yv = self.coords_gui[v]
+        xu, yu = Placements.COORDS_GUI[u]
+        xv, yv = Placements.COORDS_GUI[v]
         dx = xv - xu
         dy = yv - yu
         terms = self.terminales[linea]
@@ -535,7 +484,6 @@ class InterfazMetro2025:
     def calcular_ruta(self):
         origen_nombre = self.combo_origen.get()
         destino_nombre = self.combo_destino.get()
-
         if not origen_nombre or not destino_nombre:
             messagebox.showinfo("Ups", "Selecciona origen y destino.")
             return
@@ -547,7 +495,6 @@ class InterfazMetro2025:
 
         ruta, costo_metros = self.buscador.encontrar_ruta(id_origen, id_destino)
         self.dibujar_mapa()
-        
         if not ruta:
             self.mostrar_info("No se encontró ruta.")
             return
@@ -555,7 +502,6 @@ class InterfazMetro2025:
         num_paradas = 0
         num_transbordos = 0
         linea_actual = ruta[0].split('_')[-1]
-        
         for i in range(1, len(ruta)):
             linea_nueva = ruta[i].split('_')[-1]
             if linea_nueva != linea_actual:
@@ -580,7 +526,6 @@ class InterfazMetro2025:
         nodo_inicio = ruta[0]
         nombre_inicio = self.nombres_mapa.get(nodo_inicio, nodo_inicio.split('_')[0])
         linea_actual = nodo_inicio.split('_')[-1]
-        
         dir_str = ""
         if len(ruta) > 1:
             dir_term = self.get_direccion_linea(ruta[0], ruta[1], linea_actual)
@@ -622,12 +567,12 @@ class InterfazMetro2025:
         self.txt_pasos.config(state="disabled")
 
     def resaltar_nodo(self, nodo, color, scale, dx, dy):
-        if nodo in self.coords_gui:
-            x_base, y_base = self.coords_gui[nodo]
+        if nodo in Placements.COORDS_GUI:
+            x_base, y_base = Placements.COORDS_GUI[nodo]
             x = x_base * scale + dx
             y = y_base * scale + dy
             r = 9 * scale
-            borde = "white" # Always white border in dark mode
+            borde = "white"
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
     def animar_ruta(self, ruta, index):
@@ -644,14 +589,14 @@ class InterfazMetro2025:
         if index == 0: self.resaltar_nodo(u, "#3B82F6", scale, dx, dy)
         elif nombre_u == nombre_v: self.resaltar_nodo(u, "#FACC15", scale, dx, dy)
 
-        if u in self.coords_gui and v in self.coords_gui:
-            x1_base, y1_base = self.coords_gui[u]
-            x2_base, y2_base = self.coords_gui[v]
+        if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
+            x1_base, y1_base = Placements.COORDS_GUI[u]
+            x2_base, y2_base = Placements.COORDS_GUI[v]
             x1 = x1_base * scale + dx
             y1 = y1_base * scale + dy
             x2 = x2_base * scale + dx
             y2 = y2_base * scale + dy
-            color = "#22D3EE" # Cyan for dark mode
+            color = "#22D3EE"
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5*scale, capstyle=tk.ROUND)
         
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
