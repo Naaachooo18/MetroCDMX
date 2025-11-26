@@ -6,8 +6,11 @@ import unicodedata
 from Mapa import Mapa
 from AEstrella import AEstrella
 
-# --- CONFIGURACIÓN ESTÁTICA (COORDENADAS Y ÁNGULOS) ---
+# --- CONFIGURACIÓN ESTÁTICA ---
 class Placements:
+    BASE_WIDTH = 800
+    BASE_HEIGHT = 800
+
     COORDS_GUI = {
         "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
         "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
@@ -194,8 +197,15 @@ class BuscadorInteligente(tk.Frame):
         except:
             pass
             
-    def actualizar_colores(self, bg_input, fg_input):
+    def actualizar_colores(self, bg_input, fg_input, bg_panel=None):
+        # Configurar el input
         self.entry.config(bg=bg_input, fg=fg_input, insertbackground=fg_input)
+        
+        # Configurar el marco contenedor para que no se vea borde blanco
+        if bg_panel:
+            self.config(bg=bg_panel)
+            
+        # Configurar la lista desplegable
         if self.listbox_window:
             self.listbox.config(bg="#1E293B" if bg_input=="#334155" else "white", 
                               fg="white" if bg_input=="#334155" else "black")
@@ -250,19 +260,7 @@ class InterfazMetro2025:
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
 
-        # --- CALCULAR LÍMITES DEL MAPA PARA ESCALADO CORRECTO ---
-        # Esto permite que el mapa se agrande llenando el espacio disponible
-        # ignorando coordenadas vacías (ej. 0,0)
-        all_coords = list(Placements.COORDS_GUI.values())
-        xs = [c[0] for c in all_coords]
-        ys = [c[1] for c in all_coords]
-        
-        self.min_x = min(xs)
-        self.max_x = max(xs)
-        self.min_y = min(ys)
-        self.max_y = max(ys)
-        
-        # NOMBRES MAPA
+        # DATOS REFERENCIA
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac",
             "San_Antonio_L7": "San Antonio", "San_Pedro_de_los_Pinos_L7": "San Pedro", 
@@ -327,21 +325,19 @@ class InterfazMetro2025:
         self.lbl_sublogo = tk.Label(self.sidebar, text="Planificador Inteligente", font=("Segoe UI", 11), anchor="w")
         self.lbl_sublogo.pack(fill=tk.X, pady=(0, 40))
 
+        # --- SIN LÍNEAS BLANCAS: USAMOS PADDING ---
         self.crear_buscador("Punto de Partida", "origen")
-        tk.Frame(self.sidebar, height=20, bg=self.sidebar['bg']).pack()
-        self.crear_buscador("Destino Final", "destino")
+        # pady=(arriba, abajo) da el espacio sin crear frames vacíos
+        self.crear_buscador("Destino Final", "destino", padding=(20, 0))
 
-        tk.Frame(self.sidebar, height=30, bg=self.sidebar['bg']).pack()
-        
         self.chk_hora_punta = tk.Checkbutton(self.sidebar, text=" Hora Punta ⚠️", variable=self.hora_punta_var,
                                              relief="flat", cursor="hand2", font=("Segoe UI", 10, "bold"),
                                              highlightthickness=0, borderwidth=0, activebackground=self.sidebar['bg'], activeforeground="#EF4444")
-        self.chk_hora_punta.pack(anchor="w", pady=(0, 10))
+        self.chk_hora_punta.pack(anchor="w", pady=(30, 10))
 
         self.btn_calc = BotonModerno(self.sidebar, "Calcular Ruta Óptima", self.calcular_ruta, width=340, height=55)
-        self.btn_calc.pack()
+        self.btn_calc.pack(pady=(0, 30))
 
-        tk.Frame(self.sidebar, height=30, bg=self.sidebar['bg']).pack()
         self.lbl_res_titulo = tk.Label(self.sidebar, text="Detalles del viaje", font=("Segoe UI", 12, "bold"), anchor="w")
         self.lbl_res_titulo.pack(fill=tk.X, pady=(0, 10))
 
@@ -359,15 +355,15 @@ class InterfazMetro2025:
         
         self.canvas.bind("<Configure>", self.redimensionar_mapa)
 
-    def crear_buscador(self, titulo, var_name):
+    def crear_buscador(self, titulo, var_name, padding=(0, 0)):
         lbl = tk.Label(self.sidebar, text=titulo, font=("Segoe UI", 10, "bold"), anchor="w")
-        lbl.pack(fill=tk.X, pady=(0, 8))
+        lbl.pack(fill=tk.X, pady=(padding[0], 8)) # Padding superior aquí
         if var_name == "origen": self.lbl_origen = lbl
         else: self.lbl_destino = lbl
 
         bg_color = "#1E293B" if self.modo_oscuro else "#FFFFFF"
         cb = BuscadorInteligente(self.sidebar, self.lista_estaciones, bg=bg_color)
-        cb.pack(fill=tk.X)
+        cb.pack(fill=tk.X, pady=(0, padding[1])) # Padding inferior aquí
         
         if var_name == "origen": self.combo_origen = cb
         else: self.combo_destino = cb
@@ -401,8 +397,8 @@ class InterfazMetro2025:
         bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
         fg_input = "white" if self.modo_oscuro else "#111827"
         
-        self.combo_origen.actualizar_colores(bg_input, fg_input)
-        self.combo_destino.actualizar_colores(bg_input, fg_input)
+        self.combo_origen.actualizar_colores(bg_input, fg_input, t["bg_panel"])
+        self.combo_destino.actualizar_colores(bg_input, fg_input, t["bg_panel"])
         
         btn_bg = "#818CF8" if self.modo_oscuro else "#4F46E5"
         btn_hover = "#6366F1" if self.modo_oscuro else "#4338CA"
@@ -413,37 +409,33 @@ class InterfazMetro2025:
     def redimensionar_mapa(self, event):
         self.dibujar_mapa()
 
-    # --- CÁLCULO DE ESCALADO (ZOOM TO FIT) ---
     def obtener_transformacion(self):
-        w_available = self.canvas.winfo_width()
-        h_available = self.canvas.winfo_height()
-        
-        if w_available < 50 or h_available < 50: return 1, 0, 0
+        w_actual = self.canvas.winfo_width()
+        h_actual = self.canvas.winfo_height()
+        if w_actual < 50 or h_actual < 50: return 1, 0, 0
 
-        # Tamaño del contenido (mapa)
-        content_w = self.max_x - self.min_x
-        content_h = self.max_y - self.min_y
+        all_coords = list(Placements.COORDS_GUI.values())
+        xs = [c[0] for c in all_coords]
+        ys = [c[1] for c in all_coords]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+
+        content_w = max_x - min_x
+        content_h = max_y - min_y
+        margin = 100
         
-        margin = 80 # Margen de seguridad en pixels
-        
-        scale_x = (w_available - margin) / content_w
-        scale_y = (h_available - margin) / content_h
+        scale_x = (w_actual - margin) / content_w
+        scale_y = (h_actual - margin) / content_h
         scale = min(scale_x, scale_y)
-        
-        # Centrar el contenido escalado
+
         visual_w = content_w * scale
         visual_h = content_h * scale
         
-        # Offset para centrar en el canvas
-        offset_x = (w_available - visual_w) / 2
-        offset_y = (h_available - visual_h) / 2
+        offset_x = (w_actual - visual_w) / 2
+        offset_y = (h_actual - visual_h) / 2
         
-        # dx/dy finales para transformar coordenada 'c' -> 'c_screen'
-        # x_screen = (x - min_x) * scale + offset_x
-        # x_screen = x * scale + (offset_x - min_x * scale)
-        
-        dx = offset_x - (self.min_x * scale)
-        dy = offset_y - (self.min_y * scale)
+        dx = offset_x - (min_x * scale)
+        dy = offset_y - (min_y * scale)
         
         return scale, dx, dy
 
@@ -455,12 +447,10 @@ class InterfazMetro2025:
         scale, dx, dy = self.obtener_transformacion()
         drawn_names = set()
 
-        # 1. LÍNEAS
         for u, v in grafo.edges():
             if u in self.coords_gui and v in self.coords_gui:
                 x1_b, y1_b = self.coords_gui[u]
                 x2_b, y2_b = self.coords_gui[v]
-                
                 x1 = x1_b * scale + dx
                 y1 = y1_b * scale + dy
                 x2 = x2_b * scale + dx
@@ -475,12 +465,9 @@ class InterfazMetro2025:
                 else:
                     color = t["line_inactive"]
                     w = 3 * scale
-                
                 self.canvas.create_line(x1, y1, x2, y2, fill=color, width=w, capstyle=tk.ROUND, tags="mapa")
 
-        # 2. NODOS
         r = 7 * scale
-        # Limitar tamaño fuente para que no sea microscópica ni gigante
         font_size = int(8 * scale)
         font_size = max(6, min(font_size, 12)) 
 
