@@ -1,5 +1,5 @@
 import tkinter as tk
-from InterfazModerna import InterfazMetro2025
+from Interfaz import InterfazMetro2025
 
 def main():
     # Configuración para pantallas de alta resolución (DPI Awareness)
