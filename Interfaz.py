@@ -73,16 +73,22 @@ class ToolTip:
         self.tipwindow = None
     # Calcula la posición del cursor despliega una ventana flotante sin bordes
     def showtip(self, text):
+        # Si ya existe un tooltip o el texto está vacío, no hacemos nada
         if self.tipwindow or not text: return
+        # Obtenemos coordenadas del mouse en pantalla y sumamos...
         x = self.widget.winfo_pointerx() + 15
         y = self.widget.winfo_pointery() + 10
+        # Creamos la ventana secundaria
         self.tipwindow = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(1)
-        tw.wm_geometry(f"+{x}+{y}")
+        # Configuramos el visual de la ventana
+        tw.wm_overrideredirect(1) # Elimina bordes y barra de título
+        tw.wm_geometry(f"+{x}+{y}") # Posiciona la ventana en las coordenadas calculadas
+        # Creamos la etiqueta con el texto y colores oscuros
         label = tk.Label(tw, text=text, justify=tk.LEFT, background="#1F2937", fg="#F3F4F6", relief=tk.SOLID, borderwidth=0, font=("Segoe UI", 9), padx=8, pady=4)
         label.pack()
     # Cierra y destruye la ventana del tooltip si está visible
     def hidetip(self):
+        # Si la ventana existe en memoria
         if self.tipwindow:
             self.tipwindow.destroy()
             self.tipwindow = None
@@ -91,11 +97,14 @@ class ToolTip:
 class BuscadorInteligente(tk.Frame):
     # Inicializa el widget, configura el campo de entrada y vincula los eventos de teclado y foco
     def __init__(self, parent, lista_completa, font=("Segoe UI", 11), **kwargs):
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, **kwargs) # bases de datos de estaciones
         self.lista_completa = lista_completa
+        #Variable de control para el texto
         self.var = tk.StringVar()
+        # Configuración visual del campo de texto
         self.entry = tk.Entry(self, textvariable=self.var, font=font, relief="flat", bg="#334155", fg="white", insertbackground="white")
         self.entry.pack(fill=tk.X, ipady=8, padx=10)
+        # Vinculación de eventos
         self.entry.bind('<KeyRelease>', self.on_keyrelease)
         self.entry.bind('<FocusOut>', self.on_focus_out)
         self.entry.bind('<Down>', self.mover_abajo)
@@ -109,29 +118,36 @@ class BuscadorInteligente(tk.Frame):
         return ''.join(ch for ch in nf if unicodedata.category(ch) != 'Mn').lower()
     # Filtra la lista de opciones basándose en el texto escrito por el usuario.
     def on_keyrelease(self, event):
+        # Ignoramos teclas de navegación para no re-filtrar innecesariamente
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right'): return
         valor = self.var.get()
+        # Si el campo está vacío, escondemos la lista
         if valor == '': self.ocultar_lista()
         else:
+            # Normalizamos lo escrito y filtramos la lista completa
             valor_norm = self._normalizar(valor)
             filtrada = [item for item in self.lista_completa if valor_norm in self._normalizar(item)]
+            # Mostramos los resultados
             self.mostrar_lista(filtrada)
     # Muestra o actualiza la ventana flotante con las sugerencias filtradas debajo
     def mostrar_lista(self, items):
+        # Si no hay coincidencias, cerrar lista
         if not items:
             self.ocultar_lista()
             return
+        # Si la ventana no existe, la creamos desde cero
         if not self.listbox_window:
             self.listbox_window = tk.Toplevel(self)
-            self.listbox_window.wm_overrideredirect(True)
-            self.listbox_window.wm_attributes("-topmost", True)
+            self.listbox_window.wm_overrideredirect(True) #Sin bordes
+            self.listbox_window.wm_attributes("-topmost", True) # Siempre encima
+            # Creamos el Listbox dentro de la ventana flotante
             self.listbox = tk.Listbox(self.listbox_window, font=("Segoe UI", 10), bg="#1E293B", fg="white", selectbackground="#2563EB", relief="flat", borderwidth=0, height=5)
             self.listbox.pack(fill=tk.BOTH, expand=True)
             self.listbox.bind('<<ListboxSelect>>', self.on_select_click)
-
+        # Limpiamos la lista anterior y llenamos con la nueva filtrada
         self.listbox.delete(0, tk.END)
         for item in items: self.listbox.insert(tk.END, item)
-
+        # Calculamos posición exacta debajo del Entry
         x = self.entry.winfo_rootx()
         y = self.entry.winfo_rooty() + self.entry.winfo_height()
         w = self.entry.winfo_width()
@@ -143,7 +159,9 @@ class BuscadorInteligente(tk.Frame):
             self.listbox_window = None
     # Maneja la selección de un elemento mediante clic del ratón
     def on_select_click(self, event):
+        # Verifica que haya algo seleccionado realmente
         if not self.listbox.curselection(): return
+        # Obtiene el texto y lo establece en el input
         self.set_value(self.listbox.get(self.listbox.curselection()[0]))
     # Maneja la selección de un elemento mediante la tecla Enter
     def seleccionar_tecla(self, event):
@@ -151,17 +169,18 @@ class BuscadorInteligente(tk.Frame):
             self.set_value(self.listbox.get(self.listbox.curselection()[0]))
     # Establece el valor seleccionado en el campo de entrada y cierra la lista
     def set_value(self, valor):
-        self.var.set(valor)
-        self.entry.icursor(tk.END)
-        self.ocultar_lista()
+        self.var.set(valor)# Pone el texto en el Entry
+        self.entry.icursor(tk.END) # Mueve el cursor de escritura al final
+        self.ocultar_lista() # Cierra sugerencias
+        
     # Retorna el texto actual del campo de entrada
     def get(self):
         return self.var.get()
     # Transfieren el foco a la lista para permitir la navegación con las flechas
     def mover_abajo(self, event):
         if self.listbox_window:
-            self.listbox.focus_set()
-            self.listbox.selection_set(0)
+            self.listbox.focus_set() # Pone el foco en la lista
+            self.listbox.selection_set(0)#  Selecciona el primer elemento
 
     def mover_arriba(self, event):
         if self.listbox_window:
@@ -479,38 +498,26 @@ class InterfazMetro2025:
 
 
     def get_direccion_linea(self, u, v, linea):
-        #si la estación no tiene coordenadas, no se puede calcular
         if u not in Placements.COORDS_GUI or v not in Placements.COORDS_GUI: return ""
-        #si la linea no tiene terminales no se puede saber la dirección
         if linea not in self.terminales: return ""
-        #coordenadas de la estación actual y la siguiente
         xu, yu = Placements.COORDS_GUI[u]
         xv, yv = Placements.COORDS_GUI[v]
-        #ver hacia donde se mueve el tren(movimiento horizontal y vertical)
         dx = xv - xu
         dy = yv - yu
-        #obtener las terminales
         terms = self.terminales[linea]
-        #desplazamientos orizontales y verticales   
         if linea in ["L1", "L9", "L12"]: return terms["der"] if dx > 0 else terms["izq"]
         elif linea in ["L3", "L7"]: return terms["abajo"] if dy > 0 else terms["arriba"]
         return ""
 
-    #obtiene los nodos internos de una estación
     def obtener_mejor_nodo(self, nombre_origen, nombre_destino):
-        #obtiene nodos origen y destino
         candidatos_origen = self.mapa_nombres_reales.get(nombre_origen)
         candidatos_destino = self.mapa_nombres_reales.get(nombre_destino)
-        #si no existen no se puede calcular la ruta
         if not candidatos_origen or not candidatos_destino: return None, None
-        #mira si el nodo origen y destino estan en la misma linea
         for u in candidatos_origen:
             linea_u = u.split('_')[-1]
             for v in candidatos_destino:
                 linea_v = v.split('_')[-1]
-                #si estan en la misma linea se eligen esos nodos como el mejor par
                 if linea_u == linea_v: return u, v
-        #si no comparten linea, hay que hacer transbordo,se toma el primer candidato de cada lista
         return candidatos_origen[0], candidatos_destino[0]
 
     def calcular_ruta(self):
@@ -624,12 +631,9 @@ class InterfazMetro2025:
             #Dibuja el ovalo resaltado
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
-    #Crea un efecto de animacion de la ruta seguida por el usuario
     def animar_ruta(self, ruta, index):
         scale, dx, dy = self.obtener_transformacion()
-        #Si llega al penultim nodo para
         if index >= len(ruta) - 1: 
-            #Marca el nodo destino de rojo
             self.resaltar_nodo(ruta[-1], "#EF4444", scale, dx, dy) 
             return
 
@@ -638,9 +642,7 @@ class InterfazMetro2025:
         nombre_u = u.rsplit('_', 1)[0]
         nombre_v = v.rsplit('_', 1)[0]
         
-        #Resalta el nodo origen
         if index == 0: self.resaltar_nodo(u, "#3B82F6", scale, dx, dy)
-        #Resalta transbordos
         elif nombre_u == nombre_v: self.resaltar_nodo(u, "#FACC15", scale, dx, dy)
 
         if u in Placements.COORDS_GUI and v in Placements.COORDS_GUI:
@@ -650,22 +652,16 @@ class InterfazMetro2025:
             y1 = y1_base * scale + dy
             x2 = x2_base * scale + dx
             y2 = y2_base * scale + dy
-            color = "#22D3EE"#Color de la ruta del ususario
-            #Dibuja el segmento de la linea resaltada
+            color = "#22D3EE"
             self.canvas.create_line(x1, y1, x2, y2, fill=color, width=5*scale, capstyle=tk.ROUND)
-            
-        #Llama al siguient segmento  pasados 150ms
+        
         self.root.after(150, lambda: self.animar_ruta(ruta, index + 1))
 
-#EJECUCIÓN PRINCIPAL
 if __name__ == "__main__":
-    #Crea la ventana princiapl
     root = tk.Tk()
     try:
         from ctypes import windll
         windll.shcore.SetProcessDpiAwareness(1)
     except: pass
-    #Instancia  la aplicacion del metro
     app = InterfazMetro2025(root)
-    #Inicia el bucle de eventos
     root.mainloop()
