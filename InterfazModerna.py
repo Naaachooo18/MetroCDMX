@@ -127,127 +127,6 @@ class Placements:
     # Posicionamiento por defecto para las estaciones no listadas
     DEFAULT_PLACEMENT = (18, 0, "w", 0) 
 
-# --- CLASE DE CONFIGURACIÓN ESTÁTICA ---
-class Placements:
-    # Definición centralizada de las coordenadas y la estética del mapa.
-
-    # COORDENADAS CURVAS ORIGINALES
-    COORDS_GUI = {
-        # L7 (Vertical - Izquierda)
-        "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
-        "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
-        "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
-        "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
-        
-        # L1 (Horizontal con ligera diagonal)
-        "Observatorio_L1": (60, 440), 
-        "Tacubaya_L1": (150, 380),      
-        "Juanacatlan_L1": (230, 320), 
-        "Chapultepec_L1": (300, 280),
-        "Sevilla_L1": (380, 280), 
-        "Insurgentes_L1": (460, 280),
-        "Cuauhtemoc_L1": (530, 280), 
-        "Balderas_L1": (600, 280),    
-        
-        # L9 (Horizontal - Media)
-        "Tacubaya_L9": (150, 380), 
-        "Patriotismo_L9": (260, 380), 
-        "Chilpancingo_L9": (370, 380), 
-        "Centro_Medico_L9": (500, 380), 
-        "Lazaro_Cardenas_L9": (620, 380),
-        
-        # L3 (Vertical con ajustes de posición)
-        "Universidad_L3": (500, 750), 
-        "Copilco_L3": (500, 700),
-        "Miguel_Angel_de_Quevedo_L3": (500, 650), 
-        "Viveros_L3": (500, 600), 
-        "Coyoacan_L3": (500, 550), 
-        "Zapata_L3": (500, 500),        
-        "Division_del_Norte_L3": (500, 450), 
-        "Eugenia_L3": (500, 415), 
-        "Etiopia_L3": (500, 400), 
-        "Centro_Medico_L3": (500, 380), 
-        "Hospital_General_L3": (500, 330), 
-        "Ninos_Heroes_L3": (550, 320), 
-        "Balderas_L3": (600, 280), 
-        "Juarez_L3": (600, 200), 
-        
-        # L12 (Diagonal/Horizontal)
-        "Mixcoac_L12": (150, 620), 
-        "Insurgentes_Sur_L12": (260, 620),
-        "Hospital_20_de_Noviembre_L12": (370, 620), 
-        "Zapata_L12": (500, 500), 
-        "Parque_de_los_Venados_L12": (600, 540), 
-        "Eje_Central_L12": (680, 540),
-    }
-    
-    # ÁNGULOS BASE POR LÍNEA
-    LINE_DEFAULT_ANGLES = {
-        "L1": 0,    # Rosa (Horizontal)
-        "L3": 0,    # VERDE: Forzado a 0 grados para todas las etiquetas
-        "L7": 0,   # Naranja (Vertical)
-        "L9": 0,    # Marrón (Horizontal)
-        "L12": 0    # Amarillo (Diagonal/Horizontal)
-    }
-
-    # AJUSTE DE TEXTO: (offset_x, offset_y, anchor_pos, angle)
-    # Si 'angle' es None, toma el ángulo de LINE_DEFAULT_ANGLES
-    TEXT_PLACEMENTS = {
-        # L7 (Vertical - Izquierda)
-        "Barranca del M.": (-18, 0, "e", None), "San Antonio": (-18, 0, "e", None),
-        "Constituyentes": (-18, 0, "e", None), "Auditorio": (-18, 0, "e", None), "Polanco": (-18, 0, "e", None),
-        "San Pedro": (18, 0, "w", None), 
-        
-        # L1 (Horizontal - Arriba/Abajo)
-        "Observatorio": (-18, 0, "e", 0), 
-        "Juanacatlán": (0, -18, "s", 0),   
-        "Chapultepec": (0, 18, "n", 0),  
-        "Sevilla": (0, -18, "s", 0),     
-        "Insurgentes": (0, 18, "n", 0),  
-        "Cuauhtémoc": (0, -18, "s", 0),  
-
-        # L9 (Marrón - Abajo/Arriba)
-        "Patriotismo": (0, 18, "n", 0), 
-        "Chilpancingo": (0, 18, "n", 0), 
-        "Lázaro Cárdenas": (0, 18, "n", 0), 
-
-        # *****************************************************************
-        # L3 (Verde - TODO Horizontal (0 grados) con posicionamiento manual)
-        # *****************************************************************
-        # L3 Inferior (AHORA DERECHA)
-        "Universidad": (18, 0, "w", 0), 
-        "Copilco": (18, 0, "w", 0),
-        "M.A. Quevedo": (18, 0, "w", 0),
-        "Viveros": (18, 0, "w", 0),
-        "Coyoacán": (18, 0, "w", 0),
-        
-        # L3 Media (AHORA IZQUIERDA)
-        "División del N.": (-18, 0, "e", 0),
-        "Eugenia": (-18, 0, "e", 0),
-        "Etiopía": (-18, 0, "e", 0), 
-        
-        # AJUSTES ESPECIALES (Horizontal: ángulo 0)
-        "Hosp. General": (-18, 0, "e", 0),  
-        "Niños Héroes": (18, 0, "w", 0),  
-        "Juárez": (0, -18, "s", 0), 
-        
-        # L12 (Amarilla)
-        "Insurgentes Sur": (0, 18, "n", 0), 
-        "20 de Nov.": (0, 18, "n", 0),      
-        "P. de los Venados": (0, 18, "n", 0), 
-        "Eje Central": (0, 18, "n", 0),      
-        
-        # TRANSBORDOS (Horizontal: ángulo 0)
-        "Mixcoac": (-18, 0, "e", 0),          
-        "Balderas": (18, 0, "w", 0),           
-        "Tacubaya": (-18, 0, "e", 0),            
-        "Zapata": (-18, 0, "e", 0),            
-        "Centro Médico": (0, -18, "s", 0),      
-    }
-    
-    # Posicionamiento por defecto para las estaciones no listadas
-    DEFAULT_PLACEMENT = (18, 0, "w", 0) 
-
 # --- CLASE TOOLTIP ---
 class ToolTip:
     def __init__(self, widget):
@@ -282,7 +161,6 @@ class AutocompleteCombobox(ttk.Combobox):
         super().__init__(parent, **kwargs)
         self._lista_completa = lista_completa
         self.bind('<KeyRelease>', self.handle_keyrelease)
-        self['values'] = self._lista_completa 
         self['values'] = self._lista_completa 
 
     def handle_keyrelease(self, event):
@@ -355,7 +233,6 @@ class InterfazMetro2025:
         
         self.style = ttk.Style()
         self.style.theme_use('clam') 
-        self.style.theme_use('clam') 
         
         self.mapa_logico = Mapa()
         self.buscador = AEstrella(self.mapa_logico)
@@ -366,22 +243,7 @@ class InterfazMetro2025:
         self.hora_punta_var.set(False)
         
         # --- NOMBRES VISUALES CORREGIDOS ---
-
         self.nombres_mapa = {
-            "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac", "San_Antonio_L7": "San Antonio",        
-            "San_Pedro_de_los_Pinos_L7": "San Pedro", "Tacubaya_L7": "Tacubaya", "Constituyentes_L7": "Constituyentes",
-            "Auditorio_L7": "Auditorio", "Polanco_L7": "Polanco", "Observatorio_L1": "Observatorio",
-            "Tacubaya_L1": "Tacubaya", "Juanacatlan_L1": "Juanacatlán", "Chapultepec_L1": "Chapultepec",
-            "Sevilla_L1": "Sevilla", "Insurgentes_L1": "Insurgentes", "Cuauhtemoc_L1": "Cuauhtémoc",
-            "Balderas_L1": "Balderas", "Tacubaya_L9": "Tacubaya", "Patriotismo_L9": "Patriotismo",
-            "Chilpancingo_L9": "Chilpancingo", "Centro_Medico_L9": "Centro Médico", "Lazaro_Cardenas_L9": "Lázaro Cárdenas", 
-            "Universidad_L3": "Universidad", "Copilco_L3": "Copilco", "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", 
-            "Viveros_L3": "Viveros", "Coyoacan_L3": "Coyoacán", "Zapata_L3": "Zapata",
-            "Division_del_Norte_L3": "División del N.", "Eugenia_L3": "Eugenia", "Etiopia_L3": "Etiopía",
-            "Centro_Medico_L3": "Centro Médico", "Hospital_General_L3": "Hosp. General", "Ninos_Heroes_L3": "Niños Héroes",          
-            "Balderas_L3": "Balderas", "Juarez_L3": "Juárez", "Mixcoac_L12": "Mixcoac",
-            "Insurgentes_Sur_L12": "Insurgentes Sur", "Hospital_20_de_Noviembre_L12": "20 de Nov.", 
-            "Zapata_L12": "Zapata", "Parque_de_los_Venados_L12": "P. de los Venados", "Eje_Central_L12": "Eje Central" 
             "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac", "San_Antonio_L7": "San Antonio",        
             "San_Pedro_de_los_Pinos_L7": "San Pedro", "Tacubaya_L7": "Tacubaya", "Constituyentes_L7": "Constituyentes",
             "Auditorio_L7": "Auditorio", "Polanco_L7": "Polanco", "Observatorio_L1": "Observatorio",
@@ -420,13 +282,9 @@ class InterfazMetro2025:
             "claro": {
                 "bg_app": "#F3F4F6", "bg_panel": "#FFFFFF", "text_primary": "#111827", "text_secondary": "#6B7280",
                 "map_bg": "#FFFFFF", "line_inactive": "#E5E7EB", "node_fill": "white", "node_outline": "#374151",
-                "bg_app": "#F3F4F6", "bg_panel": "#FFFFFF", "text_primary": "#111827", "text_secondary": "#6B7280",
-                "map_bg": "#FFFFFF", "line_inactive": "#E5E7EB", "node_fill": "white", "node_outline": "#374151",
                 "text_map": "#374151"
             },
             "oscuro": {
-                "bg_app": "#0F172A", "bg_panel": "#1E293B", "text_primary": "#F8FAFC", "text_secondary": "#94A3B8",
-                "map_bg": "#0F172A", "line_inactive": "#334155", "node_fill": "#1E293B", "node_outline": "#94A3B8",
                 "bg_app": "#0F172A", "bg_panel": "#1E293B", "text_primary": "#F8FAFC", "text_secondary": "#94A3B8",
                 "map_bg": "#0F172A", "line_inactive": "#334155", "node_fill": "#1E293B", "node_outline": "#94A3B8",
                 "text_map": "#CBD5E1"
@@ -443,29 +301,6 @@ class InterfazMetro2025:
 
         # Usar la configuración centralizada de coordenadas
         self.coords_gui = Placements.COORDS_GUI
-        self.coords_gui = {
-            "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
-            "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
-            "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
-            "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
-            "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
-            "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
-            "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
-            "Cuauhtemoc_L1": (540, 280), "Balderas_L1": (620, 280),      
-            "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
-            "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
-            "Lazaro_Cardenas_L9": (620, 380),
-            "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
-            "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
-            "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
-            "Division_del_Norte_L3": (500, 450), "Eugenia_L3": (500, 415),
-            "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
-            "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (560, 305),  
-            "Balderas_L3": (620, 280), "Juarez_L3": (620, 200),
-            "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
-            "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
-            "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
-        }
 
         self.crear_layout()
         self.aplicar_tema()
@@ -586,7 +421,6 @@ class InterfazMetro2025:
         grafo = self.mapa_logico.get_grafo()
 
         # 1. DIBUJAR LÍNEAS (TÚNELES)
-        # 1. DIBUJAR LÍNEAS (TÚNELES)
         for u, v in grafo.edges():
             if u in self.coords_gui and v in self.coords_gui:
                 x1, y1 = self.coords_gui[u]
@@ -604,16 +438,6 @@ class InterfazMetro2025:
                 self.canvas.create_line(x1, y1, x2, y2, fill=color, width=w, capstyle=tk.ROUND, tags="mapa")
 
         r = 7
-        drawn_station_names = set() 
-
-        # 2. DIBUJAR NODOS Y ETIQUETAS
-        for nodo_id in grafo.nodes():
-            if nodo_id in self.coords_gui:
-                x, y = self.coords_gui[nodo_id]
-                nombre_mostrar = self.nombres_mapa.get(nodo_id, nodo_id.split('_')[0])
-                linea = nodo_id.split('_')[-1]
-                
-                # Dibujar el círculo del nodo siempre
         drawn_station_names = set() 
 
         # 2. DIBUJAR NODOS Y ETIQUETAS
@@ -654,38 +478,7 @@ class InterfazMetro2025:
                     # CAMBIO DE ESTÉTICA: FUENTE LIGERA Y TAMAÑO 8
                     self.canvas.create_text(text_x, text_y, text=nombre_mostrar, anchor=anchor_pos, font=("Segoe UI", 8), fill=t["text_map"], tags=("texto", nodo_id), angle=angle)
                     drawn_station_names.add(nombre_mostrar) # Marca el nombre como dibujado
-                item_id = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=t["node_fill"], outline=t["node_outline"], width=1.5, tags=("nodo", nodo_id))
-                
-                # Lógica para dibujar el texto solo UNA VEZ
-                if nombre_mostrar not in drawn_station_names:
-                    
-                    # Consulta el posicionamiento personalizado
-                    placement = Placements.TEXT_PLACEMENTS.get(nombre_mostrar)
-                    
-                    # Determinar offset, anchor y angle
-                    if placement:
-                        offset_x, offset_y, anchor_pos, custom_angle = placement
-                    else:
-                        # Si no hay placement personalizado, usa el default global
-                        offset_x, offset_y, anchor_pos, custom_angle = Placements.DEFAULT_PLACEMENT
-                        
-                    # CRÍTICO: Determinar el ángulo final
-                    if custom_angle is None:
-                        # Si es None, toma el ángulo de la línea (Aquí se toma el valor del diccionario LINE_DEFAULT_ANGLES)
-                        angle = Placements.LINE_DEFAULT_ANGLES.get(linea, 0)
-                    else:
-                        # Si hay un valor explícito (e.g., 45), úsalo.
-                        angle = custom_angle
 
-
-                    text_x = x + offset_x
-                    text_y = y + offset_y
-                    # CAMBIO DE ESTÉTICA: FUENTE LIGERA Y TAMAÑO 8
-                    self.canvas.create_text(text_x, text_y, text=nombre_mostrar, anchor=anchor_pos, font=("Segoe UI", 8), fill=t["text_map"], tags=("texto", nodo_id), angle=angle)
-                    drawn_station_names.add(nombre_mostrar) # Marca el nombre como dibujado
-
-                # Binding de hover
-                self.canvas.tag_bind(item_id, "<Enter>", lambda e, n=nodo_id, i=item_id: self.on_hover_enter(e, n, i))
                 # Binding de hover
                 self.canvas.tag_bind(item_id, "<Enter>", lambda e, n=nodo_id, i=item_id: self.on_hover_enter(e, n, i))
                 self.canvas.tag_bind(item_id, "<Leave>", lambda e, i=item_id: self.on_hover_leave(e, i))
@@ -708,29 +501,15 @@ class InterfazMetro2025:
         Determina la dirección de viaje (terminal de destino) para una línea dada
         basándose en la dirección del movimiento entre dos estaciones.
         """
-        """
-        Determina la dirección de viaje (terminal de destino) para una línea dada
-        basándose en la dirección del movimiento entre dos estaciones.
-        """
         if u not in self.coords_gui or v not in self.coords_gui: return ""
         if linea not in self.terminales: return ""
-        
         
         xu, yu = self.coords_gui[u]
         xv, yv = self.coords_gui[v]
         dx = xv - xu
         dy = yv - yu
         
-        
         terms = self.terminales[linea]
-        
-        # L1, L9, L12 (Líneas predominantemente horizontales)
-        if linea in ["L1", "L9", "L12"]: 
-            return terms["der"] if dx > 0 else terms["izq"]
-        # L3, L7 (Líneas predominantemente verticales)
-        elif linea in ["L3", "L7"]: 
-            return terms["abajo"] if dy > 0 else terms["arriba"]
-        
         
         # L1, L9, L12 (Líneas predominantemente horizontales)
         if linea in ["L1", "L9", "L12"]: 
@@ -785,7 +564,6 @@ class InterfazMetro2025:
             else:
                 num_paradas += 1
         
-        # Cálculo de tiempo (ajustado por el profesor)
         # Cálculo de tiempo (ajustado por el profesor)
         tiempo_viaje = (costo_metros / 580) + (num_paradas * 0.5) + (num_transbordos * 4)
         
