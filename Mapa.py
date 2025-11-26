@@ -19,9 +19,9 @@ class Mapa:
         c = 2 * asin(sqrt(a))
         r = 6371000  # Radio de la Tierra en metros
         return c * r
+    
     #Funcion que define el grafo.Primero declara las estaciones y las aristas,establece las lineas 
     #, las ruta y los transbordos y luego los añade al grafo
-    
     def inicializar_mapa(self):
         print("Cargando datos del Metro CDMX (Zona Recuadro Fucsia)...")
         datos_estaciones = {
