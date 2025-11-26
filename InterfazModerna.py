@@ -8,9 +8,6 @@ from AEstrella import AEstrella
 
 # --- CONFIGURACIÓN ESTÁTICA (COORDENADAS Y ÁNGULOS) ---
 class Placements:
-    BASE_WIDTH = 800  # Ancho base para cálculos de escala
-    BASE_HEIGHT = 800 # Alto base para cálculos de escala
-
     COORDS_GUI = {
         "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
         "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
@@ -87,11 +84,11 @@ class ToolTip:
         self.tipwindow = None
         if tw: tw.destroy()
 
-# --- BUSCADOR INTELIGENTE (SOLUCIÓN FOCO) ---
+# --- BUSCADOR INTELIGENTE ---
 class BuscadorInteligente(tk.Frame):
     def __init__(self, parent, lista_completa, font=("Segoe UI", 11), **kwargs):
         super().__init__(parent, **kwargs)
-        self._lista_completa = list(lista_completa)
+        self.lista_completa = lista_completa
         self.var = tk.StringVar()
         
         self.entry = tk.Entry(self, textvariable=self.var, font=font, 
@@ -122,7 +119,7 @@ class BuscadorInteligente(tk.Frame):
             self.ocultar_lista()
         else:
             filtrada = []
-            for item in self._lista_completa:
+            for item in self.lista_completa:
                 item_norm = self._normalizar(item)
                 if valor_norm in item_norm:
                     filtrada.append(item)
@@ -252,22 +249,42 @@ class InterfazMetro2025:
         
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
+
+        # --- CALCULAR LÍMITES DEL MAPA PARA ESCALADO CORRECTO ---
+        # Esto permite que el mapa se agrande llenando el espacio disponible
+        # ignorando coordenadas vacías (ej. 0,0)
+        all_coords = list(Placements.COORDS_GUI.values())
+        xs = [c[0] for c in all_coords]
+        ys = [c[1] for c in all_coords]
         
+        self.min_x = min(xs)
+        self.max_x = max(xs)
+        self.min_y = min(ys)
+        self.max_y = max(ys)
+        
+        # NOMBRES MAPA
         self.nombres_mapa = {
-            "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac", "San_Antonio_L7": "San Antonio",        
-            "San_Pedro_de_los_Pinos_L7": "San Pedro", "Tacubaya_L7": "Tacubaya", "Constituyentes_L7": "Constituyentes",
-            "Auditorio_L7": "Auditorio", "Polanco_L7": "Polanco", "Observatorio_L1": "Observatorio",
-            "Tacubaya_L1": "Tacubaya", "Juanacatlan_L1": "Juanacatlán", "Chapultepec_L1": "Chapultepec",
-            "Sevilla_L1": "Sevilla", "Insurgentes_L1": "Insurgentes", "Cuauhtemoc_L1": "Cuauhtémoc",
-            "Balderas_L1": "Balderas", "Tacubaya_L9": "Tacubaya", "Patriotismo_L9": "Patriotismo",
-            "Chilpancingo_L9": "Chilpancingo", "Centro_Medico_L9": "Centro Médico", "Lazaro_Cardenas_L9": "Lázaro Cárdenas", 
-            "Universidad_L3": "Universidad", "Copilco_L3": "Copilco", "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", 
-            "Viveros_L3": "Viveros", "Coyoacan_L3": "Coyoacán", "Zapata_L3": "Zapata",
-            "Division_del_Norte_L3": "División del N.", "Eugenia_L3": "Eugenia", "Etiopia_L3": "Etiopía",
-            "Centro_Medico_L3": "Centro Médico", "Hospital_General_L3": "Hosp. General", "Ninos_Heroes_L3": "Niños Héroes",          
-            "Balderas_L3": "Balderas", "Juarez_L3": "Juárez", "Mixcoac_L12": "Mixcoac",
-            "Insurgentes_Sur_L12": "Insurgentes Sur", "Hospital_20_de_Noviembre_L12": "20 de Nov.", 
-            "Zapata_L12": "Zapata", "Parque_de_los_Venados_L12": "P. de los Venados", "Eje_Central_L12": "Eje Central" 
+            "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac",
+            "San_Antonio_L7": "San Antonio", "San_Pedro_de_los_Pinos_L7": "San Pedro", 
+            "Tacubaya_L7": "Tacubaya", "Constituyentes_L7": "Constituyentes",
+            "Auditorio_L7": "Auditorio", "Polanco_L7": "Polanco",
+            "Observatorio_L1": "Observatorio", "Tacubaya_L1": "Tacubaya",
+            "Juanacatlan_L1": "Juanacatlán", "Chapultepec_L1": "Chapultepec",
+            "Sevilla_L1": "Sevilla", "Insurgentes_L1": "Insurgentes",
+            "Cuauhtemoc_L1": "Cuauhtémoc", "Balderas_L1": "Balderas",
+            "Tacubaya_L9": "Tacubaya", "Patriotismo_L9": "Patriotismo",
+            "Chilpancingo_L9": "Chilpancingo", "Centro_Medico_L9": "Centro Médico",
+            "Lazaro_Cardenas_L9": "Lázaro Cárdenas", 
+            "Universidad_L3": "Universidad", "Copilco_L3": "Copilco",
+            "Miguel_Angel_de_Quevedo_L3": "M.A. Quevedo", "Viveros_L3": "Viveros",
+            "Coyoacan_L3": "Coyoacán", "Zapata_L3": "Zapata",
+            "Division_del_Norte_L3": "División del N.", "Eugenia_L3": "Eugenia",
+            "Etiopia_L3": "Etiopía", "Centro_Medico_L3": "Centro Médico",
+            "Hospital_General_L3": "Hosp. General", "Ninos_Heroes_L3": "Niños Héroes",          
+            "Balderas_L3": "Balderas", "Juarez_L3": "Juárez",
+            "Mixcoac_L12": "Mixcoac", "Insurgentes_Sur_L12": "Insurgentes Sur",
+            "Hospital_20_de_Noviembre_L12": "20 de Nov.", "Zapata_L12": "Zapata",
+            "Parque_de_los_Venados_L12": "P. de los Venados", "Eje_Central_L12": "Eje Central" 
         }
 
         self.mapa_nombres_reales = {} 
@@ -384,9 +401,7 @@ class InterfazMetro2025:
         bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
         fg_input = "white" if self.modo_oscuro else "#111827"
         
-        self.combo_origen.config(bg=t["bg_panel"])
         self.combo_origen.actualizar_colores(bg_input, fg_input)
-        self.combo_destino.config(bg=t["bg_panel"])
         self.combo_destino.actualizar_colores(bg_input, fg_input)
         
         btn_bg = "#818CF8" if self.modo_oscuro else "#4F46E5"
@@ -398,20 +413,37 @@ class InterfazMetro2025:
     def redimensionar_mapa(self, event):
         self.dibujar_mapa()
 
+    # --- CÁLCULO DE ESCALADO (ZOOM TO FIT) ---
     def obtener_transformacion(self):
-        w_actual = self.canvas.winfo_width()
-        h_actual = self.canvas.winfo_height()
+        w_available = self.canvas.winfo_width()
+        h_available = self.canvas.winfo_height()
         
-        if w_actual < 50 or h_actual < 50: return 1, 0, 0
+        if w_available < 50 or h_available < 50: return 1, 0, 0
 
-        scale_x = w_actual / (Placements.BASE_WIDTH + 100)
-        scale_y = h_actual / (Placements.BASE_HEIGHT + 100)
-        scale = min(scale_x, scale_y) * 0.9
-
-        map_w = Placements.BASE_WIDTH * scale
-        map_h = Placements.BASE_HEIGHT * scale
-        dx = (w_actual - map_w) / 2
-        dy = (h_actual - map_h) / 2
+        # Tamaño del contenido (mapa)
+        content_w = self.max_x - self.min_x
+        content_h = self.max_y - self.min_y
+        
+        margin = 80 # Margen de seguridad en pixels
+        
+        scale_x = (w_available - margin) / content_w
+        scale_y = (h_available - margin) / content_h
+        scale = min(scale_x, scale_y)
+        
+        # Centrar el contenido escalado
+        visual_w = content_w * scale
+        visual_h = content_h * scale
+        
+        # Offset para centrar en el canvas
+        offset_x = (w_available - visual_w) / 2
+        offset_y = (h_available - visual_h) / 2
+        
+        # dx/dy finales para transformar coordenada 'c' -> 'c_screen'
+        # x_screen = (x - min_x) * scale + offset_x
+        # x_screen = x * scale + (offset_x - min_x * scale)
+        
+        dx = offset_x - (self.min_x * scale)
+        dy = offset_y - (self.min_y * scale)
         
         return scale, dx, dy
 
@@ -423,6 +455,7 @@ class InterfazMetro2025:
         scale, dx, dy = self.obtener_transformacion()
         drawn_names = set()
 
+        # 1. LÍNEAS
         for u, v in grafo.edges():
             if u in self.coords_gui and v in self.coords_gui:
                 x1_b, y1_b = self.coords_gui[u]
@@ -445,7 +478,12 @@ class InterfazMetro2025:
                 
                 self.canvas.create_line(x1, y1, x2, y2, fill=color, width=w, capstyle=tk.ROUND, tags="mapa")
 
+        # 2. NODOS
         r = 7 * scale
+        # Limitar tamaño fuente para que no sea microscópica ni gigante
+        font_size = int(8 * scale)
+        font_size = max(6, min(font_size, 12)) 
+
         for nodo in grafo.nodes():
             if nodo in self.coords_gui:
                 x_b, y_b = self.coords_gui[nodo]
@@ -469,10 +507,9 @@ class InterfazMetro2025:
                     
                     t_x = x + (off_x * scale)
                     t_y = y + (off_y * scale)
-                    font_s = max(6, int(8 * scale))
                     
-                    self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_s, "bold"), fill=t["map_bg"], width=150, angle=ang)
-                    self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_s, "bold"), fill=t["text_map"], tags=("texto", nodo), angle=ang)
+                    self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_size, "bold"), fill=t["map_bg"], width=150, angle=ang)
+                    self.canvas.create_text(t_x, t_y, text=nombre, anchor=anchor, font=("Segoe UI", font_size, "bold"), fill=t["text_map"], tags=("texto", nodo), angle=ang)
                     drawn_names.add(nombre)
 
                 self.canvas.tag_bind(item_id, "<Enter>", lambda e, n=nodo, i=item_id: self.on_hover_enter(e, n, i))
