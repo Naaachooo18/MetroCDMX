@@ -81,7 +81,7 @@ class Placements:
         # L1 (Horizontal - Arriba/Abajo)
         "Observatorio": (20, 20, "s", 0), 
         "Juanacatlán": (0, -18, "s", 0),   
-        "Chapultepec": (0, 18, "n", 0),  
+        "Chapultepec": (0, -18, "s", 0),  
         "Sevilla": (0, -18, "s", 0),     
         "Insurgentes": (0, 18, "n", 0),  
         "Cuauhtémoc": (0, -18, "s", 0),  
@@ -115,14 +115,14 @@ class Placements:
         "Insurgentes Sur": (0, 18, "n", 0), 
         "20 de Nov.": (0, 18, "n", 0),      
         "P. de los Venados": (0, 18, "n", 0), 
-        "Eje Central": (0, 18, "n", 0),      
+        "Eje Central": (0, -25, "n", 0),      
         
         # TRANSBORDOS (Horizontal: ángulo 0)
         "Mixcoac": (-18, 0, "e", 0),          
         "Balderas": (18, 0, "w", 0),           
         "Tacubaya": (-18, 0, "e", 0),            
         "Zapata": (-18, 0, "e", 0),            
-        "Centro Médico": (0, -18, "s", 0),      
+        "Centro Médico": (43, -10, "s", 0),      
     }
     
     # Posicionamiento por defecto para las estaciones no listadas
