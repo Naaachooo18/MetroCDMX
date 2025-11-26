@@ -2,16 +2,14 @@ import networkx as nx
 from math import radians, cos, sin, asin, sqrt
 
 class Mapa:
+    #Constructor de Mapa,crear el grafo y  guarda las coordenadas de las estaciones
     def __init__(self):
         self.grafo = nx.Graph()
         self.posiciones = {}
         self.inicializar_mapa()
-
+    #Funcion que se encarga de determinar el coste en funcion al peso de la arista,utiliza la formula
+    #de Haversine para calcular la ditancia entre dos coordenadas
     def calcular_distancia(self, coord1, coord2):
-        """
-        Calcula la distancia en metros entre dos coordenadas (lat, lon)
-        usando la fórmula de Haversine.
-        """
         lat1, lon1 = map(radians, coord1)
         lat2, lon2 = map(radians, coord2)
 
@@ -21,16 +19,13 @@ class Mapa:
         c = 2 * asin(sqrt(a))
         r = 6371000  # Radio de la Tierra en metros
         return c * r
-
+    #Funcion que define el grafo.Primero declara las estaciones y las aristas,establece las lineas 
+    #, las ruta y los transbordos y luego los añade al grafo
+    
     def inicializar_mapa(self):
         print("Cargando datos del Metro CDMX (Zona Recuadro Fucsia)...")
-
-        # ---------------------------------------------------------
-        # 1. BASE DE DATOS DE COORDENADAS (Latitud, Longitud)
-        # Solo incluye las estaciones especificadas en el enunciado.
-        # ---------------------------------------------------------
         datos_estaciones = {
-            # --- LÍNEA 1 (Granate): Observatorio <-> Balderas [cite: 7] ---
+            # LÍNEA 1 Observatorio - Balderas
             "Observatorio_L1": (19.3985, -99.2004),
             "Tacubaya_L1": (19.4032, -99.1871),
             "Juanacatlan_L1": (19.4129, -99.1821),
@@ -40,7 +35,7 @@ class Mapa:
             "Cuauhtemoc_L1": (19.4259, -99.1547),
             "Balderas_L1": (19.4274, -99.1491),
 
-            # --- LÍNEA 3 (Verde Claro): Universidad <-> Juárez [cite: 8] ---
+            #LÍNEA 3 Universidad - Juárez
             "Universidad_L3": (19.3244, -99.1738),
             "Copilco_L3": (19.3359, -99.1766),
             "Miguel_Angel_de_Quevedo_L3": (19.3453, -99.1816),
@@ -53,27 +48,27 @@ class Mapa:
             "Centro_Medico_L3": (19.4064, -99.1554),
             "Hospital_General_L3": (19.4143, -99.1538),
             "Ninos_Heroes_L3": (19.4207, -99.1508),
-            "Balderas_L3": (19.4274, -99.1491), # Misma coord que L1
+            "Balderas_L3": (19.4274, -99.1491), 
             "Juarez_L3": (19.4344, -99.1478),
 
-            # --- LÍNEA 7 (Naranja): Barranca del Muerto <-> Polanco [cite: 8] ---
+            #LÍNEA 7 Barranca del Muerto - Polanco
             "Barranca_del_Muerto_L7": (19.3616, -99.1894),
             "Mixcoac_L7": (19.3757, -99.1873),
             "San_Antonio_L7": (19.3837, -99.1866),
             "San_Pedro_de_los_Pinos_L7": (19.3906, -99.1862),
-            "Tacubaya_L7": (19.4032, -99.1880), # Ligeramente desplazado de L1 en realidad
+            "Tacubaya_L7": (19.4032, -99.1880), 
             "Constituyentes_L7": (19.4124, -99.1920),
             "Auditorio_L7": (19.4242, -99.1922),
             "Polanco_L7": (19.4336, -99.1906),
 
-            # --- LÍNEA 9 (Marrón): Tacubaya <-> Lázaro Cárdenas [cite: 9] ---
+            #LÍNEA 9 Tacubaya - Lázaro Cárdenas
             "Tacubaya_L9": (19.4030, -99.1875),
             "Patriotismo_L9": (19.4063, -99.1793),
             "Chilpancingo_L9": (19.4066, -99.1685),
             "Centro_Medico_L9": (19.4064, -99.1554),
             "Lazaro_Cardenas_L9": (19.4070, -99.1428),
 
-            # --- LÍNEA 12 (Verde Oscuro): Mixcoac <-> Eje Central [cite: 9] ---
+            #LÍNEA 12 Mixcoac - Eje Central
             "Mixcoac_L12": (19.3757, -99.1873),
             "Insurgentes_Sur_L12": (19.3734, -99.1792),
             "Hospital_20_de_Noviembre_L12": (19.3725, -99.1721),
@@ -82,9 +77,6 @@ class Mapa:
             "Eje_Central_L12": (19.3688, -99.1481),
         }
 
-        # ---------------------------------------------------------
-        # 2. DEFINICIÓN DE RUTAS (Orden de estaciones)
-        # ---------------------------------------------------------
         rutas = [
             # L1
             ["Observatorio_L1", "Tacubaya_L1", "Juanacatlan_L1", "Chapultepec_L1", 
@@ -105,31 +97,20 @@ class Mapa:
              "Zapata_L12", "Parque_de_los_Venados_L12", "Eje_Central_L12"]
         ]
 
-        # ---------------------------------------------------------
-        # 3. CONSTRUCCIÓN DEL GRAFO (Nodos y Aristas Geográficas)
-        # ---------------------------------------------------------
-        # Agregar nodos
+      
         for estacion_id, coords in datos_estaciones.items():
             self.grafo.add_node(estacion_id)
             self.posiciones[estacion_id] = coords
         
-        # Agregar aristas entre estaciones consecutivas
         for ruta in rutas:
             for i in range(len(ruta) - 1):
                 origen = ruta[i]
                 destino = ruta[i+1]
                 
                 # Calcular peso basado en distancia real
-                peso = self.calcular_distancia(datos_estaciones[origen], datos_estaciones[destino])
-                
-                # Añadir arista con peso real
+                peso = self.calcular_distancia(datos_estaciones[origen], datos_estaciones[destino])                
                 self.grafo.add_edge(origen, destino, weight=peso)
-
-        # ---------------------------------------------------------
-        # 4. TRANSBORDOS (Conexiones entre líneas) [cite: 10-14]
-        # Se añade un coste (peso) extra por cambiar de línea.
-        # Aquí he puesto 180 (aprox 3 min caminando) como ejemplo.
-        # ---------------------------------------------------------
+        #Coste establecido al transbordo
         coste_transbordo = 180.0 
 
         transbordos = [
