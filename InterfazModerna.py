@@ -75,6 +75,7 @@ class AutocompleteCombobox(ttk.Combobox):
             self.focus_set()              # Forzar foco en el texto, no en la lista
         except:
             pass
+        
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
