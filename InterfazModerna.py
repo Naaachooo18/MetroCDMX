@@ -155,7 +155,7 @@ class ToolTip:
         self.tipwindow = None
         if tw: tw.destroy()
 
-# --- CLASE AUTOCOMPLETE COMBOBOX ---
+# --- CLASE AUTOCOMPLETE COMBOBOX (CORREGIDA: NO BLOQUEA ESCRITURA) ---
 class AutocompleteCombobox(ttk.Combobox):
     def __init__(self, parent, lista_completa, **kwargs):
         super().__init__(parent, **kwargs)
@@ -164,32 +164,42 @@ class AutocompleteCombobox(ttk.Combobox):
         self['values'] = self._lista_completa 
 
     def handle_keyrelease(self, event):
-        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
+        # Ignorar teclas de navegación y enter/tab
+        if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End', 'Prior', 'Next'):
             return
 
+        # Guardar posición del cursor
         try:
             cursor_pos = self.index(tk.INSERT)
-        except:
+        except Exception:
             cursor_pos = 0
         
         valor_actual = self.get()
-        
+
+        # Si está vacío: restaurar lista completa y cerrar menú
         if valor_actual == '':
             self['values'] = self._lista_completa
-            self.tk.call('ttk::combobox::Post', self._w)
+            # cerrar desplegable
+            self.tk.call('ttk::combobox::Unpost', self._w)
         else:
-            filtrada = [item for item in self._lista_completa if valor_actual.lower() in item.lower()]
+            # Filtrar
+            filtrada = [item for item in self._lista_completa 
+                        if valor_actual.lower() in item.lower()]
             self['values'] = filtrada
-            
-            if filtrada:
+
+            # 💡 Solo abrir menú si hay AL MENOS 3 caracteres y coincidencias
+            if len(valor_actual) >= 3 and filtrada:
                 self.tk.call('ttk::combobox::Post', self._w)
             else:
                 self.tk.call('ttk::combobox::Unpost', self._w)
-        
+
+        # Restaurar posición del cursor y quitar selección
         try:
             self.icursor(cursor_pos)
-        except:
+            self.selection_clear(0, tk.END)
+        except Exception:
             pass
+        
 
 # --- CLASE BOTÓN MODERNO ---
 class BotonModerno(tk.Canvas):
@@ -231,6 +241,7 @@ class InterfazMetro2025:
         self.root.title("Metro CDMX • Navigator 2025")
         self.root.geometry("1280x850")
         
+        # ESTILO CLAM (MODERNO)
         self.style = ttk.Style()
         self.style.theme_use('clam') 
         
@@ -241,8 +252,7 @@ class InterfazMetro2025:
         # Checkbox Hora Punta
         self.hora_punta_var = tk.BooleanVar()
         self.hora_punta_var.set(False)
-        
-        # --- NOMBRES VISUALES CORREGIDOS ---
+
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.", "Mixcoac_L7": "Mixcoac", "San_Antonio_L7": "San Antonio",        
             "San_Pedro_de_los_Pinos_L7": "San Pedro", "Tacubaya_L7": "Tacubaya", "Constituyentes_L7": "Constituyentes",
@@ -260,7 +270,6 @@ class InterfazMetro2025:
             "Zapata_L12": "Zapata", "Parque_de_los_Venados_L12": "P. de los Venados", "Eje_Central_L12": "Eje Central" 
         }
 
-        # --- PREPARACIÓN DE DATOS BUSCADOR (Mapeo de nombres cortos a IDs de grafo) ---
         self.mapa_nombres_reales = {} 
         for nodo in self.mapa_logico.get_grafo().nodes():
             nombre_bonito = self.nombres_mapa.get(nodo, nodo.split('_')[0])
@@ -270,6 +279,7 @@ class InterfazMetro2025:
         
         self.lista_estaciones = sorted(list(self.mapa_nombres_reales.keys()))
 
+        # Datos Referencia
         self.terminales = {
             "L1": {"izq": "Observatorio", "der": "Pantitlán"},
             "L3": {"arriba": "Indios Verdes", "abajo": "Universidad"},
@@ -299,8 +309,29 @@ class InterfazMetro2025:
             "L1": "Línea 1", "L3": "Línea 3", "L7": "Línea 7", "L9": "Línea 9", "L12": "Línea 12"
         }
 
-        # Usar la configuración centralizada de coordenadas
-        self.coords_gui = Placements.COORDS_GUI
+        self.coords_gui = {
+            "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
+            "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
+            "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
+            "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
+            "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
+            "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
+            "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
+            "Cuauhtemoc_L1": (540, 280), "Balderas_L1": (620, 280),      
+            "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
+            "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
+            "Lazaro_Cardenas_L9": (620, 380),
+            "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
+            "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
+            "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
+            "Division_del_Norte_L3": (500, 450), "Eugenia_L3": (500, 415),
+            "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
+            "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (560, 305),  
+            "Balderas_L3": (620, 280), "Juarez_L3": (620, 200),
+            "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
+            "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
+            "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
+        }
 
         self.crear_layout()
         self.aplicar_tema()
