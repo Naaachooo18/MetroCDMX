@@ -122,7 +122,7 @@ class Placements:
         "Balderas": (18, 0, "w", 0),           
         "Tacubaya": (-18, 0, "e", 0),            
         "Zapata": (-18, 0, "e", 0),            
-        "Centro Médico": (43, -10, "s", 0),      
+        "Centro Médico": (47, -10, "s", 0),      
     }
     
     # Posicionamiento por defecto para las estaciones no listadas
