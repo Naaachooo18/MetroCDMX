@@ -43,37 +43,40 @@ class AutocompleteCombobox(ttk.Combobox):
         self['values'] = self._lista_completa
 
     def handle_keyrelease(self, event):
-        # Ignorar teclas de navegación y enter
+        # Ignorar teclas de navegación y enter/tab
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End', 'Prior', 'Next'):
             return
 
-        # 1. Guardar posición exacta del cursor
+        # Guardar posición del cursor
         try:
             cursor_pos = self.index(tk.INSERT)
-        except:
+        except Exception:
             cursor_pos = 0
         
         valor_actual = self.get()
-        
-        # Filtrar lista
+
+        # Si está vacío: restaurar lista completa y cerrar menú
         if valor_actual == '':
             self['values'] = self._lista_completa
+            # cerrar desplegable
+            self.tk.call('ttk::combobox::Unpost', self._w)
         else:
-            filtrada = [item for item in self._lista_completa if valor_actual.lower() in item.lower()]
+            # Filtrar
+            filtrada = [item for item in self._lista_completa 
+                        if valor_actual.lower() in item.lower()]
             self['values'] = filtrada
-            
-            # Gestionar desplegable
-            if filtrada:
+
+            # 💡 Solo abrir menú si hay AL MENOS 3 caracteres y coincidencias
+            if len(valor_actual) >= 3 and filtrada:
                 self.tk.call('ttk::combobox::Post', self._w)
             else:
                 self.tk.call('ttk::combobox::Unpost', self._w)
-        
-        # 2. CRÍTICO: Restaurar estado de escritura
+
+        # Restaurar posición del cursor y quitar selección
         try:
-            self.icursor(cursor_pos)      # Poner cursor donde estaba
-            self.selection_clear()        # Quitar selección azul (que borraba el texto)
-            self.focus_set()              # Forzar foco en el texto, no en la lista
-        except:
+            self.icursor(cursor_pos)
+            self.selection_clear(0, tk.END)
+        except Exception:
             pass
         
 
