@@ -16,7 +16,6 @@ class ToolTip:
 
     def showtip(self, text):
         if self.tipwindow or not text: return
-        # Posición basada en el ratón
         x = self.widget.winfo_pointerx() + 15
         y = self.widget.winfo_pointery() + 10
         
@@ -44,11 +43,9 @@ class AutocompleteCombobox(ttk.Combobox):
         self['values'] = self._lista_completa
 
     def handle_keyrelease(self, event):
-        # Ignorar teclas de navegación
         if event.keysym in ('Up', 'Down', 'Return', 'Tab', 'Left', 'Right', 'Home', 'End'):
             return
 
-        # 1. GUARDAR POSICIÓN DEL CURSOR
         try:
             cursor_pos = self.index(tk.INSERT)
         except:
@@ -68,7 +65,6 @@ class AutocompleteCombobox(ttk.Combobox):
             else:
                 self.tk.call('ttk::combobox::Unpost', self._w)
         
-        # 2. RESTAURAR POSICIÓN DEL CURSOR
         try:
             self.icursor(cursor_pos)
         except:
@@ -114,15 +110,17 @@ class InterfazMetro2025:
         self.root.title("Metro CDMX • Navigator 2025")
         self.root.geometry("1280x850")
         
-        # --- ESTILO VISUAL (IMPORTANTE PARA ELIMINAR WINDOWS XP) ---
         self.style = ttk.Style()
-        self.style.theme_use('clam') # Esto activa el modo plano moderno
+        self.style.theme_use('clam')
         
         self.mapa_logico = Mapa()
         self.buscador = AEstrella(self.mapa_logico)
         self.modo_oscuro = True 
         
-        # --- NOMBRES VISUALES CORREGIDOS ---
+        # Variable para el Checkbox de Hora Punta
+        self.hora_punta_var = tk.BooleanVar()
+        self.hora_punta_var.set(False)
+
         self.nombres_mapa = {
             "Barranca_del_Muerto_L7": "Barranca del M.",
             "Mixcoac_L7": "Mixcoac",
@@ -167,7 +165,6 @@ class InterfazMetro2025:
             "Eje_Central_L12": "Eje Central" 
         }
 
-        # --- PREPARACIÓN DE DATOS BUSCADOR ---
         self.mapa_nombres_reales = {} 
         for nodo in self.mapa_logico.get_grafo().nodes():
             nombre_bonito = self.nombres_mapa.get(nodo, nodo.split('_')[0])
@@ -211,21 +208,17 @@ class InterfazMetro2025:
         }
 
         self.coords_gui = {
-            # L7
             "Barranca_del_Muerto_L7": (150, 720), "Mixcoac_L7": (150, 620),
             "San_Antonio_L7": (150, 540), "San_Pedro_de_los_Pinos_L7": (150, 460),
             "Tacubaya_L7": (150, 380), "Constituyentes_L7": (150, 280),
             "Auditorio_L7": (150, 200), "Polanco_L7": (150, 120),
-            # L1
             "Observatorio_L1": (60, 440), "Tacubaya_L1": (150, 380),      
             "Juanacatlan_L1": (230, 320), "Chapultepec_L1": (300, 280),
             "Sevilla_L1": (380, 280), "Insurgentes_L1": (460, 280),
             "Cuauhtemoc_L1": (540, 280), "Balderas_L1": (620, 280),      
-            # L9
             "Tacubaya_L9": (150, 380), "Patriotismo_L9": (260, 380),
             "Chilpancingo_L9": (370, 380), "Centro_Medico_L9": (500, 380), 
             "Lazaro_Cardenas_L9": (620, 380),
-            # L3
             "Universidad_L3": (500, 750), "Copilco_L3": (500, 700),
             "Miguel_Angel_de_Quevedo_L3": (500, 650), "Viveros_L3": (500, 600),
             "Coyoacan_L3": (500, 550), "Zapata_L3": (500, 500),        
@@ -233,7 +226,6 @@ class InterfazMetro2025:
             "Etiopia_L3": (500, 400), "Centro_Medico_L3": (500, 380), 
             "Hospital_General_L3": (500, 330), "Ninos_Heroes_L3": (560, 305),  
             "Balderas_L3": (620, 280), "Juarez_L3": (620, 200),
-            # L12
             "Mixcoac_L12": (150, 620), "Insurgentes_Sur_L12": (260, 620),
             "Hospital_20_de_Noviembre_L12": (370, 620), "Zapata_L12": (500, 500),       
             "Parque_de_los_Venados_L12": (600, 540), "Eje_Central_L12": (680, 540),
@@ -259,7 +251,17 @@ class InterfazMetro2025:
         tk.Frame(self.sidebar, height=20, bg=self.sidebar['bg']).pack()
         self.crear_autocomplete("Destino Final", "destino")
 
-        tk.Frame(self.sidebar, height=40, bg=self.sidebar['bg']).pack()
+        # --- BOTÓN HORA PUNTA ---
+        tk.Frame(self.sidebar, height=30, bg=self.sidebar['bg']).pack() # Spacer
+        self.chk_hora_punta = tk.Checkbutton(self.sidebar, text=" Hora Punta ⚠️", 
+                                             variable=self.hora_punta_var,
+                                             relief="flat", cursor="hand2", 
+                                             font=("Segoe UI", 10, "bold"),
+                                             highlightthickness=0, borderwidth=0,
+                                             activebackground=self.sidebar['bg'],
+                                             activeforeground="#EF4444") # Rojo al hacer click
+        self.chk_hora_punta.pack(anchor="w", pady=(0, 10))
+
         self.btn_calc = BotonModerno(self.sidebar, "Calcular Ruta Óptima", self.calcular_ruta, width=340, height=55)
         self.btn_calc.pack()
 
@@ -300,6 +302,7 @@ class InterfazMetro2025:
         self.txt_pasos.tag_config("direccion", foreground="#2563EB", font=("Segoe UI", 10, "bold"))
         self.txt_pasos.tag_config("transbordo", foreground="#EF4444", font=("Segoe UI", 10, "bold"))
         self.txt_pasos.tag_config("pasos", lmargin1=15, lmargin2=15)
+        self.txt_pasos.tag_config("alerta", foreground="#EF4444", font=("Segoe UI", 10, "italic"))
 
     def cambiar_tema(self):
         self.modo_oscuro = not self.modo_oscuro
@@ -319,7 +322,11 @@ class InterfazMetro2025:
 
         self.txt_pasos.config(bg=t["bg_app"], fg=t["text_primary"])
         
-        # Configurar estilo global para Combobox (Elimina el borde 3D feo)
+        # Checkbutton estilo manual
+        self.chk_hora_punta.config(bg=t["bg_panel"], fg=t["text_primary"], 
+                                   selectcolor=t["bg_panel"], activebackground=t["bg_panel"])
+
+        # Configurar estilo global para Combobox
         bg_input = "#334155" if self.modo_oscuro else "#F9FAFB"
         fg_input = "white" if self.modo_oscuro else "#111827"
         
@@ -361,7 +368,6 @@ class InterfazMetro2025:
         for nodo in grafo.nodes():
             if nodo in self.coords_gui:
                 x, y = self.coords_gui[nodo]
-                # USAR EL DICCIONARIO DE NOMBRES BONITOS
                 nombre_mostrar = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 linea = nodo.split('_')[-1]
 
@@ -454,6 +460,11 @@ class InterfazMetro2025:
                 num_paradas += 1
         
         tiempo_viaje = (costo_metros / 580) + (num_paradas * 0.5) + (num_transbordos * 4)
+        
+        # --- APLICAR FACTOR HORA PUNTA ---
+        if self.hora_punta_var.get():
+            tiempo_viaje *= 1.5 
+            
         tiempo_viaje = int(math.ceil(tiempo_viaje))
 
         self.mostrar_pasos_detallados(ruta, costo_metros, tiempo_viaje)
@@ -464,6 +475,9 @@ class InterfazMetro2025:
         self.txt_pasos.delete(1.0, tk.END)
         
         self.txt_pasos.insert(tk.END, f"⏱ {tiempo} min total  |  📏 {int(distancia)} m\n\n", "titulo")
+        
+        if self.hora_punta_var.get():
+            self.txt_pasos.insert(tk.END, "⚠ Retrasos por hora punta incluidos\n\n", "alerta")
 
         nodo_inicio = ruta[0]
         nombre_inicio = self.nombres_mapa.get(nodo_inicio, nodo_inicio.split('_')[0])
@@ -485,7 +499,6 @@ class InterfazMetro2025:
             
             if linea != linea_actual:
                 if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
-                
                 nombre_trans = self.nombres_mapa.get(nodo, nodo.split('_')[0])
                 if i == 1 and nombre_trans == nombre_inicio:
                     linea_actual = linea
