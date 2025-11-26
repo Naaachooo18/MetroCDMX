@@ -390,34 +390,47 @@ class InterfazMetro2025:
     # Cambia el tamaño del mapa cuando reajustas el tamaño de la ventana
     def redimensionar_mapa(self, event):
         self.dibujar_mapa()
+
     # Calcula la escala y el centrado para ajustar las coordenadas al tamaño actual del canvas
     def obtener_transformacion(self):
+        #obtengo el ancho y largo del canvas
         w_actual = self.canvas.winfo_width()
         h_actual = self.canvas.winfo_height()
+        #si es muy pequeño, hace la transformación por defecto
         if w_actual < 50 or h_actual < 50: return 1, 0, 0
-
+        
+        #obtiene las coordenadas originales de las estaciones
         all_coords = list(Placements.COORDS_GUI.values())
         xs = [c[0] for c in all_coords]
         ys = [c[1] for c in all_coords]
+        #calcula los límites máximos y mínimos 
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
 
+        #calculo el ancho y largo del contenido del mapa
         content_w = max_x - min_x
         content_h = max_y - min_y
+        #hago un margen(para que no quede pegado a los bordes)
         margin = 100
         
+        #ajusta el mapa al canvas
         scale_x = (w_actual - margin) / content_w
         scale_y = (h_actual - margin) / content_h
+        #seleccionamos el menor para asegurarnos que quede dentro del canvas
         scale = min(scale_x, scale_y)
 
+        #calculamos las dimensiones que ocupara el mapa
         visual_w = content_w * scale
         visual_h = content_h * scale
+        #calcula el desplazamiento para centrar el mapa
         offset_x = (w_actual - visual_w) / 2
         offset_y = (h_actual - visual_h) / 2
-        
+        #obtiene los desplazamientos con la coordenada mínima()para que este alineado
         dx = offset_x - (min_x * scale)
         dy = offset_y - (min_y * scale)
+        #devuelve la escala y los desplazamientos para dibujar
         return scale, dx, dy
+    
     #dibuja las nodos y las aristas en el canvas
     def dibujar_mapa(self):
         self.canvas.delete("all") #borra el dibujo anterior
