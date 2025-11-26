@@ -549,27 +549,35 @@ class InterfazMetro2025:
         self.mostrar_pasos_detallados(ruta, costo_metros, tiempo_viaje)
         self.animar_ruta(ruta, 0)
 
+    #Muestra al usuario la ruta optima del algoritmo,identificando transbordos 
     def mostrar_pasos_detallados(self, ruta, distancia, tiempo):
+        #Habilita la escritura y limpia el contenido que hubiese antes
         self.txt_pasos.config(state="normal")
         self.txt_pasos.delete(1.0, tk.END)
+        #Muestra el coste y tiempo total
         self.txt_pasos.insert(tk.END, f"⏱ {tiempo} min total  |  📏 {int(distancia)} m\n\n", "titulo")
+        #Mira si se activo la opcion de hora punta
         if self.hora_punta_var.get(): self.txt_pasos.insert(tk.END, "⚠ Retrasos por hora punta incluidos\n\n", "alerta")
 
+        #Inicia la ruta
         nodo_inicio = ruta[0]
         nombre_inicio = self.nombres_mapa.get(nodo_inicio, nodo_inicio.split('_')[0])
         linea_actual = nodo_inicio.split('_')[-1]
+        #Obtiene la direccion de la primea linea
         dir_str = ""
         if len(ruta) > 1:
             dir_term = self.get_direccion_linea(ruta[0], ruta[1], linea_actual)
             if dir_term: dir_str = f"Dir. {dir_term}"
 
+        #Inserta el punto de salida
         self.txt_pasos.insert(tk.END, f"• Inicio en {nombre_inicio}\n", "pasos")
         if dir_str: self.txt_pasos.insert(tk.END, f"   → {self.info_lineas.get(linea_actual)} ({dir_str})\n", "direccion")
         
-        count = 0
+        count = 0 #Contador de estacione
         for i in range(1, len(ruta)):
             nodo = ruta[i]
             linea = nodo.split('_')[-1]
+            #Mira si hay transbordo
             if linea != linea_actual:
                 if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
                 nombre_trans = self.nombres_mapa.get(nodo, nodo.split('_')[0])
@@ -579,12 +587,13 @@ class InterfazMetro2025:
                         dir_term = self.get_direccion_linea(ruta[i], ruta[i+1], linea)
                         if dir_term: self.txt_pasos.insert(tk.END, f"   → Cambio a {self.info_lineas.get(linea)} (Dir. {dir_term})\n", "direccion")
                     continue
+                #Imprime el transbordo y la siguiente linea que usa
                 self.txt_pasos.insert(tk.END, f"• TRANSBORDO en {nombre_trans}\n", "transbordo")
                 if i+1 < len(ruta):
                     dir_term = self.get_direccion_linea(ruta[i], ruta[i+1], linea)
                     if dir_term: self.txt_pasos.insert(tk.END, f"   → {self.info_lineas.get(linea)} (Dir. {dir_term})\n", "direccion")
                 linea_actual = linea
-                count = 0
+                count = 0 #Resetea el contador
             else: count += 1
         
         if count > 0: self.txt_pasos.insert(tk.END, f"   ↓  {count} estaciones\n", "meta")
@@ -592,19 +601,27 @@ class InterfazMetro2025:
         self.txt_pasos.insert(tk.END, f"🏁 Llegada a {nombre_fin}", "titulo")
         self.txt_pasos.config(state="disabled")
 
+    #Muestra un mensaje de informacion o error
     def mostrar_info(self, texto):
+        #Habilita para poder escribir 
         self.txt_pasos.config(state="normal")
+        #Borra contenido previo
         self.txt_pasos.delete(1.0, tk.END)
+        #Inserta texto
         self.txt_pasos.insert(tk.END, texto)
         self.txt_pasos.config(state="disabled")
 
+    #Resalta un nodo con un halo para asegurar el centrado
     def resaltar_nodo(self, nodo, color, scale, dx, dy):
+        #Verifica que el nodo exista
         if nodo in Placements.COORDS_GUI:
             x_base, y_base = Placements.COORDS_GUI[nodo]
+            #aplica la transformacion
             x = x_base * scale + dx
             y = y_base * scale + dy
             r = 9 * scale
             borde = "white"
+            #Dibuja el ovalo resaltado
             self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=color, outline=borde, width=2, tags="ruta_animada")
 
     def animar_ruta(self, ruta, index):
